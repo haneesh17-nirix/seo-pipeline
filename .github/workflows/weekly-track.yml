@@ -1,0 +1,47 @@
+name: Weekly SEO Rank Tracking
+
+on:
+  schedule:
+    # Every Monday at 8:00 AM UTC (1:30 PM IST)
+    - cron: "0 8 * * 1"
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Write GSC credentials
+        run: echo '${{ secrets.GSC_CREDENTIALS_JSON }}' > gsc-credentials.json
+
+      - name: Run keyword tracking
+        env:
+          SITE_URL: https://www.nyrix.aazhara.in
+          GSC_SITE_URL: https://www.nyrix.aazhara.in
+          GSC_CREDENTIALS_FILE: ./gsc-credentials.json
+          TARGET_COUNTRY: in
+        run: npm run dev -- track
+
+      - name: Upload reports as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-report-${{ github.run_id }}
+          path: reports/
+          retention-days: 90
+
+      - name: Commit rank history
+        run: |
+          git config user.name "SEO Bot"
+          git config user.email "seo-bot@github-actions"
+          git add data/rank-history.json reports/ || true
+          git diff --staged --quiet || git commit -m "chore: weekly SEO rank snapshot $(date +%Y-%m-%d)"
+          git push || true
