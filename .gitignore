@@ -2,11 +2,18 @@ node_modules/
 dist/
 .env
 *.env.local
-data/rank-history.json
-output/
-reports/
-*.log
-logs/
+
+# Runtime output — tracked dirs but not contents
+data/*
+!data/.gitkeep
+output/*
+!output/.gitkeep
+reports/*
+!reports/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# Secrets
 infra/.deploy-state.json
 gsc-credentials.json
 *.pem
