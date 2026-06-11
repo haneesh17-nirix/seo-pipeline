@@ -1,0 +1,135 @@
+name: Weekly SEO Pipeline
+
+on:
+  schedule:
+    # Monday 06:00 UTC (11:30 IST / 10:00 UAE) — full pipeline
+    - cron: "0 6 * * 1"
+    # Thursday 06:00 UTC — rank tracking only (mid-week check)
+    - cron: "0 6 * * 4"
+  workflow_dispatch:
+    inputs:
+      brand:
+        description: "Brand slug to run (leave empty for all brands)"
+        required: false
+        default: ""
+      skip_generate:
+        description: "Skip content generation"
+        type: boolean
+        default: false
+      only_track:
+        description: "Run rank tracking only"
+        type: boolean
+        default: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      # ── write per-brand GSC credentials ──────────────────────────────────────
+      - name: Write GSC credentials — Habun RAK
+        if: env.HABUN_GSC != ''
+        env:
+          HABUN_GSC: ${{ secrets.GSC_CREDENTIALS_HABUN }}
+        run: |
+          mkdir -p brands/habun-rak
+          echo "$HABUN_GSC" > brands/habun-rak/gsc-credentials.json
+
+      - name: Write GSC credentials — Habun Sharjah
+        if: env.HABUN_SHJ_GSC != ''
+        env:
+          HABUN_SHJ_GSC: ${{ secrets.GSC_CREDENTIALS_HABUN_SHARJAH }}
+        run: |
+          mkdir -p brands/habun-sharjah
+          echo "$HABUN_SHJ_GSC" > brands/habun-sharjah/gsc-credentials.json
+
+      - name: Write GSC credentials — Nyrix
+        if: env.NYRIX_GSC != ''
+        env:
+          NYRIX_GSC: ${{ secrets.GSC_CREDENTIALS_NYRIX }}
+        run: |
+          mkdir -p brands/nyrix
+          echo "$NYRIX_GSC" > brands/nyrix/gsc-credentials.json
+
+      - name: Write GSC credentials — BlueMetal Pro
+        if: env.BLUEMETAL_GSC != ''
+        env:
+          BLUEMETAL_GSC: ${{ secrets.GSC_CREDENTIALS_BLUEMETAL }}
+        run: |
+          mkdir -p brands/bluemetal-pro
+          echo "$BLUEMETAL_GSC" > brands/bluemetal-pro/gsc-credentials.json
+
+      # ── detect run mode ───────────────────────────────────────────────────────
+      - name: Determine run mode
+        id: mode
+        run: |
+          # Thursday = tracking only
+          DAY=$(date +%u)
+          if [[ "$DAY" == "4" && "${{ github.event_name }}" == "schedule" ]]; then
+            echo "only_track=true" >> $GITHUB_OUTPUT
+            echo "Mode: Thursday tracking-only run"
+          elif [[ "${{ inputs.only_track }}" == "true" ]]; then
+            echo "only_track=true" >> $GITHUB_OUTPUT
+            echo "Mode: Manual tracking-only run"
+          else
+            echo "only_track=false" >> $GITHUB_OUTPUT
+            echo "Mode: Full pipeline run"
+          fi
+
+          if [[ -n "${{ inputs.brand }}" ]]; then
+            echo "brand_flag=--brand ${{ inputs.brand }}" >> $GITHUB_OUTPUT
+          else
+            echo "brand_flag=" >> $GITHUB_OUTPUT
+          fi
+
+      # ── run tracking ──────────────────────────────────────────────────────────
+      - name: Run rank tracking
+        run: |
+          BRAND_FLAG="${{ steps.mode.outputs.brand_flag }}"
+          if [[ "${{ steps.mode.outputs.only_track }}" == "true" ]]; then
+            echo "Running: seo track-all $BRAND_FLAG"
+            npx ts-node src/cli.ts track-all $BRAND_FLAG
+          fi
+
+      # ── run full pipeline (Monday / manual) ───────────────────────────────────
+      - name: Run full pipeline
+        if: steps.mode.outputs.only_track == 'false'
+        run: |
+          BRAND_FLAG="${{ steps.mode.outputs.brand_flag }}"
+          SKIP_GEN=""
+          [[ "${{ inputs.skip_generate }}" == "true" ]] && SKIP_GEN="--skip-generate"
+          echo "Running: seo run-all $BRAND_FLAG $SKIP_GEN --skip-generate"
+          # Note: content generation is skipped in CI (no Ollama access).
+          # Run locally with OPEN_TUNNEL=1 ./scripts/run-pipeline.sh for full generation.
+          npx ts-node src/cli.ts run-all $BRAND_FLAG --skip-generate
+
+      # ── upload reports as artifacts ───────────────────────────────────────────
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-reports-${{ github.run_id }}
+          path: brands/*/reports/
+          retention-days: 90
+          if-no-files-found: ignore
+
+      # ── commit rank history + reports back to repo ────────────────────────────
+      - name: Commit results
+        run: |
+          git config user.name "SEO Bot"
+          git config user.email "seo-bot@users.noreply.github.com"
+          git add brands/*/logs/rank-history.json brands/*/reports/ brands/*/output/ || true
+          git diff --staged --quiet || \
+            git commit -m "chore: automated SEO pipeline — $(date +%Y-%m-%d)"
+          git push || true
