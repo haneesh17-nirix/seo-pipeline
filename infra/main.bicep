@@ -1,8 +1,8 @@
 @description('Azure region')
-param location string = 'eastus'
+param location string = 'uaenorth'
 
 @description('VM name prefix')
-param vmName string = 'seo-ollama'
+param vmName string = 'habun-seo-ollama'
 
 @description('Admin username for the VM')
 param adminUsername string = 'seouser'
@@ -32,7 +32,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
           protocol: 'Tcp'
           access: 'Allow'
           direction: 'Inbound'
-          sourceAddressPrefix: myIp
+          sourceAddressPrefix: '*'
           sourcePortRange: '*'
           destinationAddressPrefix: '*'
           destinationPortRange: '22'
@@ -92,9 +92,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      // Standard_D4s_v3: 4 vCPU, 16GB RAM — comfortably runs llama3.2 (~4.7GB)
-      // Approx cost: ~$140/month. Deallocate when not in use to save cost.
-      vmSize: 'Standard_D4s_v3'
+      // Standard_D2s_v3: 2 vCPU, 8GB RAM — runs llama3.2 8b (~4.7GB), UAE North
+      // Approx cost: ~$26/month at 4hrs/day. Deallocate when not generating content.
+      vmSize: 'Standard_D2s_v3'
     }
     osProfile: {
       computerName: vmName
