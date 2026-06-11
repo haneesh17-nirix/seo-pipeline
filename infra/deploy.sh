@@ -2,9 +2,9 @@
 # One-shot Azure deployment script for the SEO Ollama VM
 set -euo pipefail
 
-RESOURCE_GROUP="seo-pipeline-rg"
-LOCATION="eastus"
-VM_NAME="seo-ollama"
+RESOURCE_GROUP="habun-seo-rg"
+LOCATION="uaenorth"
+VM_NAME="habun-seo-ollama"
 
 echo ""
 echo "=== SEO Pipeline — Azure Deployment ==="
@@ -23,13 +23,19 @@ echo ""
 SSH_KEY_PATH="$HOME/.ssh/id_rsa_seo_ollama"
 if [ ! -f "$SSH_KEY_PATH" ]; then
   echo "Generating SSH key pair at $SSH_KEY_PATH..."
-  ssh-keygen -t rsa -b 4096 -f "$SSH_KEY_PATH" -N "" -C "seo-ollama-vm"
+  ssh-keygen -t rsa -b 4096 -f "$SSH_KEY_PATH" -N "" -C "habun-seo-ollama-vm"
 fi
 SSH_PUBLIC_KEY=$(cat "${SSH_KEY_PATH}.pub")
 
 # ── Your current IP (for SSH whitelist) ───────────────────────────────────
 MY_IP=$(curl -s ifconfig.me)
-echo "Your public IP: $MY_IP (will be whitelisted for SSH)"
+# Detect IPv4 vs IPv6 and use correct CIDR prefix length
+if [[ "$MY_IP" == *":"* ]]; then
+  MY_IP_CIDR="${MY_IP}/128"
+else
+  MY_IP_CIDR="${MY_IP}/32"
+fi
+echo "Your public IP: $MY_IP → CIDR: $MY_IP_CIDR (will be whitelisted for SSH)"
 echo ""
 
 # ── Resource group ─────────────────────────────────────────────────────────
@@ -46,7 +52,7 @@ DEPLOY_OUTPUT=$(az deployment group create \
     vmName="$VM_NAME" \
     adminUsername="seouser" \
     sshPublicKey="$SSH_PUBLIC_KEY" \
-    myIp="$MY_IP/32" \
+    myIp="$MY_IP_CIDR" \
   --output json)
 
 VM_IP=$(echo "$DEPLOY_OUTPUT" | python3 -c "import sys,json; print(json.load(sys.stdin)['properties']['outputs']['vmPublicIp']['value'])")
