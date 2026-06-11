@@ -40,3 +40,15 @@ Google Search Console API → data/rank-history.json → reports/
 - Bootstrapped content generation (Ollama), GSC tracking, sitemap, schema modules
 - Azure Bicep infra for Ollama VM
 - GitHub Actions for weekly automated rank tracking
+
+### 2026-06-09 — vdb8c7b4 — docs: add CHANGELOG, architecture/design/API/change-log docs, test and log dirs, fix gitignore
+
+- docs: add CHANGELOG, architecture/design/API/change-log docs, test and log dirs, fix gitignore (files: src/reports/reporter.ts)
+
+### 2026-06-09 — vdb8c7b4 — docs: add CHANGELOG, architecture/design/API/change-log docs, test and log dirs, fix gitignore
+
+- docs: add CHANGELOG, architecture/design/API/change-log docs, test and log dirs, fix gitignore (files: src/reports/reporter.ts)
+
+### 2026-06-09 — vdb8c7b4 — docs: add CHANGELOG, architecture/design/API/change-log docs, test and log dirs, fix gitignore
+
+- docs: add CHANGELOG, architecture/design/API/change-log docs, test and log dirs, fix gitignore (files: src/reports/reporter.ts)
