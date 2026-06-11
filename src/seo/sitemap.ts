@@ -2,6 +2,7 @@ import { create } from "xmlbuilder2";
 import * as fs from "fs";
 import * as path from "path";
 import { SITE, KEYWORD_GROUPS } from "../keywords/config";
+import type { BrandConfig } from "../brands/loader";
 
 interface SitemapPage {
   url: string;
@@ -10,9 +11,29 @@ interface SitemapPage {
   priority?: number;
 }
 
-// Core pages derived from keyword groups + static pages
-function buildPageList(): SitemapPage[] {
+function buildPageList(brand?: BrandConfig): SitemapPage[] {
   const today = new Date().toISOString().split("T")[0];
+
+  if (brand) {
+    const pages: SitemapPage[] = brand.pages.map((p, i) => ({
+      url: p.path,
+      changefreq: p.path === "/" ? "weekly" : "monthly",
+      priority: p.path === "/" ? 1.0 : 0.7,
+      lastmod: today,
+    }));
+    const keywordPages: SitemapPage[] = brand.keywordGroups.map((g) => ({
+      url: g.targetPage,
+      changefreq: "weekly" as const,
+      priority: 0.85,
+      lastmod: today,
+    }));
+    // dedupe by path
+    const seen = new Set(pages.map((p) => p.url));
+    for (const p of keywordPages) {
+      if (!seen.has(p.url)) { seen.add(p.url); pages.push(p); }
+    }
+    return pages;
+  }
 
   const staticPages: SitemapPage[] = [
     { url: "/", changefreq: "weekly", priority: 1.0, lastmod: today },
@@ -32,9 +53,9 @@ function buildPageList(): SitemapPage[] {
   return [...staticPages, ...keywordPages];
 }
 
-export function generateSitemap(pages?: SitemapPage[]): string {
-  const list = pages ?? buildPageList();
-  const base = SITE.url.replace(/\/$/, "");
+export function generateSitemap(pages?: SitemapPage[], brand?: BrandConfig): string {
+  const list = pages ?? buildPageList(brand);
+  const base = (brand?.siteUrl ?? SITE.url).replace(/\/$/, "");
 
   const root = create({ version: "1.0", encoding: "UTF-8" })
     .ele("urlset", {
@@ -53,10 +74,10 @@ export function generateSitemap(pages?: SitemapPage[]): string {
   return root.end({ prettyPrint: true });
 }
 
-export function saveSitemap(outputDir?: string): string {
+export function saveSitemap(brand?: BrandConfig, outputDir?: string): string {
   const dir = outputDir ?? path.join(process.cwd(), "output");
   fs.mkdirSync(dir, { recursive: true });
   const filePath = path.join(dir, "sitemap.xml");
-  fs.writeFileSync(filePath, generateSitemap(), "utf8");
+  fs.writeFileSync(filePath, generateSitemap(undefined, brand), "utf8");
   return filePath;
 }

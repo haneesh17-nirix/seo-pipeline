@@ -16,5 +16,14 @@ logs/*
 # Secrets
 infra/.deploy-state.json
 gsc-credentials.json
+brands/*/gsc-credentials.json
 *.pem
 *.key
+
+# Brand output dirs (tracked dirs but not contents)
+brands/*/output/*
+brands/*/reports/*
+brands/*/logs/*
+!brands/*/output/.gitkeep
+!brands/*/reports/.gitkeep
+!brands/*/logs/.gitkeep

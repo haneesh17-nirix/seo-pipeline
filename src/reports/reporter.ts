@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { GscRow, getHistory, getPositionDelta } from "../tracking/gsc";
-import { KEYWORD_GROUPS, ALL_KEYWORDS } from "../keywords/config";
+import type { BrandConfig } from "../brands/loader";
 
 function posIcon(pos: number): string {
   if (pos === 0) return "—";
@@ -18,27 +18,38 @@ function deltaStr(delta: number | null): string {
   return `▼${delta}`;
 }
 
-export function generateMarkdownReport(results: GscRow[]): string {
+export function generateMarkdownReport(results: GscRow[], brand?: BrandConfig): string {
   const date = new Date().toISOString().split("T")[0];
+  const title = brand ? `${brand.name} SEO Report` : "SEO Report";
+  const groups = brand?.keywordGroups ?? [];
+
   const lines = [
-    `# SEO Report — ${date}`,
+    `# ${title} — ${date}`,
     ``,
-    `> Source: Google Search Console`,
+    `> Source: Google Search Console${brand ? ` | Country: ${brand.targetCountry.toUpperCase()}` : ""}`,
     ``,
   ];
 
-  for (const group of KEYWORD_GROUPS) {
-    lines.push(`## ${group.group}`);
-    lines.push(`| Keyword | Position | Δ | Clicks | Impressions | CTR |`);
-    lines.push(`|---------|----------|---|--------|-------------|-----|`);
-
-    for (const kw of group.keywords) {
-      const r = results.find((x) => x.keyword.toLowerCase() === kw.toLowerCase());
-      if (!r) continue;
-      const delta = getPositionDelta(kw);
-      lines.push(
-        `| ${kw} | ${posIcon(r.position)} | ${deltaStr(delta)} | ${r.clicks} | ${r.impressions} | ${r.ctr}% |`
-      );
+  if (groups.length) {
+    for (const group of groups) {
+      lines.push(`## ${group.group}`);
+      lines.push(`| Keyword | Position | Δ | Clicks | Impressions | CTR |`);
+      lines.push(`|---------|----------|---|--------|-------------|-----|`);
+      for (const kw of group.keywords) {
+        const r = results.find((x) => x.keyword.toLowerCase() === kw.toLowerCase());
+        if (!r) continue;
+        const delta = getPositionDelta(kw, brand?.slug);
+        lines.push(
+          `| ${kw} | ${posIcon(r.position)} | ${deltaStr(delta)} | ${r.clicks} | ${r.impressions} | ${r.ctr}% |`
+        );
+      }
+      lines.push("");
+    }
+  } else {
+    lines.push(`| Keyword | Position | Clicks | Impressions | CTR |`);
+    lines.push(`|---------|----------|--------|-------------|-----|`);
+    for (const r of results) {
+      lines.push(`| ${r.keyword} | ${posIcon(r.position)} | ${r.clicks} | ${r.impressions} | ${r.ctr}% |`);
     }
     lines.push("");
   }
@@ -60,13 +71,14 @@ export function generateMarkdownReport(results: GscRow[]): string {
   return lines.join("\n");
 }
 
-export function saveReport(results: GscRow[]): string {
+export function saveReport(results: GscRow[], reportDir?: string, brandName?: string): string {
   const date = new Date().toISOString().split("T")[0];
-  const dir = path.join(process.cwd(), "reports");
+  const dir = reportDir ?? path.join(process.cwd(), "reports");
   fs.mkdirSync(dir, { recursive: true });
 
   const mdPath = path.join(dir, `report-${date}.md`);
-  fs.writeFileSync(mdPath, generateMarkdownReport(results), "utf8");
+  const brand = brandName ? ({ name: brandName } as Partial<BrandConfig>) : undefined;
+  fs.writeFileSync(mdPath, generateMarkdownReport(results, brand as BrandConfig | undefined), "utf8");
 
   const jsonPath = path.join(dir, `data-${date}.json`);
   fs.writeFileSync(jsonPath, JSON.stringify(results, null, 2), "utf8");
@@ -74,22 +86,31 @@ export function saveReport(results: GscRow[]): string {
   return mdPath;
 }
 
-export function printConsoleReport(results: GscRow[]): void {
-  console.log("\n┌──────────────────────────────────────────────────────────────┐");
-  console.log("│            SEO Keyword Performance (Google Search Console)   │");
-  console.log("└──────────────────────────────────────────────────────────────┘\n");
+export function printConsoleReport(results: GscRow[], brand?: BrandConfig): void {
+  const title = brand ? `${brand.name} — Keyword Performance` : "SEO Keyword Performance";
+  console.log(`\n┌──────────────────────────────────────────────────────────────┐`);
+  console.log(`│  ${title.padEnd(60)}│`);
+  console.log(`└──────────────────────────────────────────────────────────────┘\n`);
 
-  for (const group of KEYWORD_GROUPS) {
-    console.log(`  ◈ ${group.group}`);
-    for (const kw of group.keywords) {
-      const r = results.find((x) => x.keyword.toLowerCase() === kw.toLowerCase());
-      if (!r) continue;
-      const delta = getPositionDelta(kw);
+  const groups = brand?.keywordGroups ?? [];
+
+  if (groups.length) {
+    for (const group of groups) {
+      console.log(`  ◈ ${group.group}`);
+      for (const kw of group.keywords) {
+        const r = results.find((x) => x.keyword.toLowerCase() === kw.toLowerCase());
+        if (!r) continue;
+        const delta = getPositionDelta(kw, brand?.slug);
+        const pos = r.position > 0 ? `#${r.position}` : "no data";
+        const change = delta !== null ? ` (${deltaStr(delta)})` : "";
+        console.log(`    ${kw.padEnd(42)} ${pos.padEnd(8)}${change.padEnd(8)} ${r.clicks} clicks  ${r.impressions} impr`);
+      }
+      console.log();
+    }
+  } else {
+    for (const r of results) {
       const pos = r.position > 0 ? `#${r.position}` : "no data";
-      const change = delta !== null ? ` (${deltaStr(delta)})` : "";
-      const clicks = `${r.clicks} clicks`;
-      const imp = `${r.impressions} impr`;
-      console.log(`    ${kw.padEnd(42)} ${pos.padEnd(8)}${change.padEnd(8)} ${clicks.padEnd(12)} ${imp}`);
+      console.log(`  ${r.keyword.padEnd(42)} ${pos.padEnd(8)} ${r.clicks} clicks  ${r.impressions} impr`);
     }
     console.log();
   }

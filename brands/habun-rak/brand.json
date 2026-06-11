@@ -1,0 +1,69 @@
+{
+  "slug": "habun-rak",
+  "name": "Habun — Ras Al Khaimah",
+  "type": "restaurant",
+  "siteUrl": "https://habun.ae",
+  "gscSiteUrl": "https://habun.ae",
+  "gscCredentialsFile": "./brands/habun-rak/gsc-credentials.json",
+  "targetCountry": "ae",
+  "gscCountryCode": "are",
+  "languages": ["en", "ar"],
+  "ollamaModel": "llama3.2",
+  "keywordGroups": [
+    {
+      "group": "Brand",
+      "keywords": ["Habun restaurant", "Habun UAE", "Habun RAK", "Habun Ras Al Khaimah", "Habun menu"],
+      "targetPage": "/",
+      "schemaType": "Restaurant"
+    },
+    {
+      "group": "Local RAK",
+      "keywords": [
+        "restaurant in Ras Al Khaimah",
+        "best restaurant Ras Al Khaimah",
+        "family restaurant RAK",
+        "casual dining Ras Al Khaimah",
+        "where to eat in RAK",
+        "halal restaurant Ras Al Khaimah",
+        "restaurants near me RAK"
+      ],
+      "targetPage": "/ras-al-khaimah",
+      "schemaType": "Restaurant"
+    },
+    {
+      "group": "AI & Voice",
+      "keywords": [
+        "best restaurant near me Ras Al Khaimah",
+        "good family restaurant in RAK UAE",
+        "where should I eat in Ras Al Khaimah",
+        "top rated restaurants RAK 2025"
+      ],
+      "targetPage": "/ras-al-khaimah",
+      "schemaType": "Restaurant"
+    },
+    {
+      "group": "Menu & Food",
+      "keywords": [
+        "Habun menu prices",
+        "halal food Ras Al Khaimah",
+        "Arabic restaurant RAK",
+        "best grills RAK"
+      ],
+      "targetPage": "/menu",
+      "schemaType": "Menu"
+    }
+  ],
+  "pages": [
+    { "path": "/", "label": "Home" },
+    { "path": "/menu", "label": "Menu" },
+    { "path": "/ras-al-khaimah", "label": "RAK Location" },
+    { "path": "/about", "label": "About" },
+    { "path": "/reservations", "label": "Reservations" },
+    { "path": "/contact", "label": "Contact" }
+  ],
+  "apiEndpoints": [
+    { "method": "GET", "path": "/api/menu", "expect": 200, "label": "Menu API" },
+    { "method": "GET", "path": "/api/locations", "expect": 200, "label": "Locations API" },
+    { "method": "POST", "path": "/api/reservations", "expect": 201, "label": "Reservations API" }
+  ]
+}
