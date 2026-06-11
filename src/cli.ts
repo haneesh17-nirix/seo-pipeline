@@ -9,7 +9,7 @@ import { Command } from "commander";
 
 import { loadBrand, listBrands, createBrand, brandOutputDir, BrandConfig } from "./brands/loader";
 import { generateAndSave, batchGenerate, checkOllama } from "./content/generator";
-import { trackAndSave } from "./tracking/gsc";
+import { trackAndSave, runOAuth2Flow } from "./tracking/gsc";
 import { saveReport, printConsoleReport } from "./reports/reporter";
 import { saveSitemap } from "./seo/sitemap";
 import { saveSchemas } from "./seo/schema";
@@ -116,6 +116,44 @@ brandCmd
       console.log();
     }
     console.log(`  Total: ${total} keywords across ${b.keywordGroups.length} groups\n`);
+  });
+
+// ── auth ─────────────────────────────────────────────────────────────────────
+program
+  .command("auth")
+  .description("Authorise Google Search Console access via OAuth2 (browser login)")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .option("--client-id <id>", "OAuth2 client ID (or set GSC_CLIENT_ID in .env)")
+  .option("--client-secret <secret>", "OAuth2 client secret (or set GSC_CLIENT_SECRET in .env)")
+  .action(async (opts) => {
+    const brand = resolveBrand(opts.brand);
+    const clientId = opts.clientId ?? process.env.GSC_CLIENT_ID;
+    const clientSecret = opts.clientSecret ?? process.env.GSC_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      console.log(`
+  OAuth2 credentials needed. Here's how to get them (2 minutes):
+
+  1. Go to https://console.cloud.google.com/apis/credentials
+  2. Create credentials → OAuth 2.0 Client ID → Desktop app → Name "seo-pipeline" → Create
+  3. Copy the Client ID and Client Secret
+
+  Then run:
+    seo auth --brand ${brand.slug} --client-id <id> --client-secret <secret>
+
+  Or add to .env:
+    GSC_CLIENT_ID=your-client-id
+    GSC_CLIENT_SECRET=your-client-secret
+  Then run: seo auth --brand ${brand.slug}
+
+  Note: OAuth2 Desktop credentials are NOT blocked by iam.disableServiceAccountKeyCreation.
+`);
+      process.exit(1);
+    }
+
+    const outputFile = path.resolve(brand.gscCredentialsFile);
+    console.log(`\n  Authorising [${brand.name}] → ${brand.gscSiteUrl}\n`);
+    await runOAuth2Flow(clientId, clientSecret, outputFile);
   });
 
 // ── generate ─────────────────────────────────────────────────────────────────
