@@ -267,4 +267,124 @@ program
     printConsoleReport(results as any, brand);
   });
 
+// ── run-all ───────────────────────────────────────────────────────────────────
+program
+  .command("run-all")
+  .description("Run full pipeline for one or all brands: generate → track → sitemap → schema")
+  .option("-b, --brand <slug>", "Limit to one brand (default: all brands)")
+  .option("-t, --type <type>", `Content type for generate step`, "blog-post")
+  .option("--skip-generate", "Skip content generation (useful when Ollama is unavailable)")
+  .option("--skip-track", "Skip GSC rank tracking")
+  .option("--skip-sitemap", "Skip sitemap generation")
+  .option("--skip-schema", "Skip schema generation")
+  .option("--only-track", "Only run rank tracking (alias for --skip-generate --skip-sitemap --skip-schema)")
+  .action(async (opts) => {
+    const allSlugs = opts.brand ? [opts.brand] : listBrands();
+    if (!allSlugs.length) {
+      console.error("\nNo brands configured. Run: seo brand add\n");
+      process.exit(1);
+    }
+
+    const skipGenerate = opts.skipGenerate || opts.onlyTrack;
+    const skipTrack    = opts.skipTrack;
+    const skipSitemap  = opts.skipSitemap || opts.onlyTrack;
+    const skipSchema   = opts.skipSchema  || opts.onlyTrack;
+    const type         = opts.type as ContentType;
+
+    const ollamaOk = skipGenerate ? false : await checkOllama();
+    if (!skipGenerate && !ollamaOk) {
+      console.log(`\n⚠  Ollama not reachable — skipping content generation`);
+      console.log(`   To enable: ssh -i ~/.ssh/id_rsa_habun_seo -L 11434:localhost:11434 seouser@20.216.5.173 -N &\n`);
+    }
+
+    const width = 50;
+    const line = "─".repeat(width);
+    const results: { slug: string; steps: string[] }[] = [];
+
+    for (const slug of allSlugs) {
+      const brand = loadBrand(slug);
+      console.log(`\n${"═".repeat(width)}`);
+      console.log(`  ${brand.name}  (${slug})`);
+      console.log(`${"═".repeat(width)}`);
+      const steps: string[] = [];
+
+      // step 1 — generate
+      if (!skipGenerate && ollamaOk) {
+        const outputDir = brandOutputDir(slug, "output");
+        const keywords = brand.keywordGroups.flatMap((g) => g.keywords);
+        console.log(`\n  [1/4] Generating ${type} for ${keywords.length} keywords...`);
+        const genResults = await batchGenerate(type, keywords, outputDir, brand);
+        const ok = genResults.filter((r) => !r.error).length;
+        console.log(`  ✓ ${ok}/${genResults.length} files generated`);
+        steps.push(`generate: ${ok}/${genResults.length}`);
+      } else {
+        console.log(`\n  [1/4] Generate — skipped`);
+        steps.push("generate: skipped");
+      }
+
+      // step 2 — track
+      if (!skipTrack) {
+        const credPath = path.resolve(brand.gscCredentialsFile);
+        if (fs.existsSync(credPath)) {
+          process.env.GSC_CREDENTIALS_FILE = credPath;
+          process.env.GSC_SITE_URL = brand.gscSiteUrl;
+          console.log(`\n  [2/4] Tracking ${brand.keywordGroups.flatMap((g) => g.keywords).length} keywords...`);
+          try {
+            const keywords = brand.keywordGroups.flatMap((g) => g.keywords);
+            const rankResults = await trackAndSave(keywords, brand.targetCountry, brand.slug);
+            const reportDir = brandOutputDir(slug, "reports");
+            const file = saveReport(rankResults, reportDir, brand.name);
+            const ranked = rankResults.filter((r) => r.position > 0).length;
+            console.log(`  ✓ ${ranked}/${rankResults.length} keywords ranked → ${path.relative(process.cwd(), file)}`);
+            steps.push(`track: ${ranked}/${rankResults.length} ranked`);
+          } catch (err: any) {
+            console.log(`  ✗ Track failed: ${err.message}`);
+            steps.push(`track: failed`);
+          }
+        } else {
+          console.log(`\n  [2/4] Track — skipped (no GSC credentials)`);
+          steps.push("track: no credentials");
+        }
+      } else {
+        console.log(`\n  [2/4] Track — skipped`);
+        steps.push("track: skipped");
+      }
+
+      // step 3 — sitemap
+      if (!skipSitemap) {
+        const outputDir = brandOutputDir(slug, "output");
+        console.log(`\n  [3/4] Generating sitemap...`);
+        const sitemapFile = saveSitemap(brand, outputDir);
+        console.log(`  ✓ ${path.relative(process.cwd(), sitemapFile)}`);
+        steps.push("sitemap: done");
+      } else {
+        console.log(`\n  [3/4] Sitemap — skipped`);
+        steps.push("sitemap: skipped");
+      }
+
+      // step 4 — schema
+      if (!skipSchema) {
+        const outputDir = brandOutputDir(slug, "output");
+        console.log(`\n  [4/4] Generating schema markup...`);
+        const schemaDir = saveSchemas(brand, outputDir);
+        console.log(`  ✓ ${path.relative(process.cwd(), schemaDir)}`);
+        steps.push("schema: done");
+      } else {
+        console.log(`\n  [4/4] Schema — skipped`);
+        steps.push("schema: skipped");
+      }
+
+      results.push({ slug, steps });
+    }
+
+    // summary
+    console.log(`\n${"═".repeat(width)}`);
+    console.log(`  Run complete — ${results.length} brand(s)`);
+    console.log(`${"═".repeat(width)}\n`);
+    for (const r of results) {
+      console.log(`  ${r.slug.padEnd(22)} ${r.steps.join("  ·  ")}`);
+    }
+    console.log();
+  });
+
 program.parse(process.argv);
