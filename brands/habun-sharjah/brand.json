@@ -1,0 +1,59 @@
+{
+  "slug": "habun-sharjah",
+  "name": "Habun — Sharjah",
+  "type": "restaurant",
+  "siteUrl": "https://habun.ae",
+  "gscSiteUrl": "https://habun.ae",
+  "gscCredentialsFile": "./brands/habun-sharjah/gsc-credentials.json",
+  "targetCountry": "ae",
+  "gscCountryCode": "are",
+  "languages": ["en", "ar"],
+  "ollamaModel": "llama3.2",
+  "keywordGroups": [
+    {
+      "group": "Brand Sharjah",
+      "keywords": ["Habun Sharjah", "Habun restaurant Sharjah", "Habun menu Sharjah"],
+      "targetPage": "/sharjah",
+      "schemaType": "Restaurant"
+    },
+    {
+      "group": "Local Sharjah",
+      "keywords": [
+        "restaurant in Sharjah",
+        "best restaurant Sharjah",
+        "family restaurant Sharjah",
+        "casual dining Sharjah",
+        "where to eat Sharjah",
+        "halal restaurant Sharjah",
+        "dine in Sharjah",
+        "restaurants near me Sharjah"
+      ],
+      "targetPage": "/sharjah",
+      "schemaType": "Restaurant"
+    },
+    {
+      "group": "AI & Voice",
+      "keywords": [
+        "best restaurant near me Sharjah",
+        "good family restaurant in Sharjah UAE",
+        "where should I eat in Sharjah",
+        "top rated restaurants Sharjah 2025",
+        "restaurant with parking Sharjah"
+      ],
+      "targetPage": "/sharjah",
+      "schemaType": "Restaurant"
+    }
+  ],
+  "pages": [
+    { "path": "/", "label": "Home" },
+    { "path": "/menu", "label": "Menu" },
+    { "path": "/sharjah", "label": "Sharjah Location" },
+    { "path": "/about", "label": "About" },
+    { "path": "/reservations", "label": "Reservations" },
+    { "path": "/contact", "label": "Contact" }
+  ],
+  "apiEndpoints": [
+    { "method": "GET", "path": "/api/menu", "expect": 200, "label": "Menu API" },
+    { "method": "GET", "path": "/api/locations", "expect": 200, "label": "Locations API" }
+  ]
+}

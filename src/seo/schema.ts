@@ -1,9 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { SITE, KEYWORD_GROUPS } from "../keywords/config";
-
-// Generates JSON-LD schema markup for each keyword group page
-// Paste the output into the <head> of the corresponding page
+import type { BrandConfig, KeywordGroup } from "../brands/loader";
 
 interface SchemaPage {
   group: string;
@@ -12,26 +10,23 @@ interface SchemaPage {
   keywords: string[];
 }
 
-function buildSoftwareSchema(page: SchemaPage): object {
-  const base = SITE.url.replace(/\/$/, "");
+function buildSoftwareSchema(page: SchemaPage, brandName: string, siteUrl: string): object {
+  const base = siteUrl.replace(/\/$/, "");
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: SITE.name,
+    name: brandName,
     url: `${base}${page.targetPage}`,
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web, iOS, Android",
-    description: `${SITE.tagline}. Optimized for: ${page.keywords.slice(0, 3).join(", ")}.`,
+    description: `${brandName}. Optimized for: ${page.keywords.slice(0, 3).join(", ")}.`,
     offers: {
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
     },
-    brand: {
-      "@type": "Brand",
-      name: SITE.name,
-    },
+    brand: { "@type": "Brand", name: brandName },
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "4.8",
@@ -41,80 +36,84 @@ function buildSoftwareSchema(page: SchemaPage): object {
   };
 }
 
-function buildProductSchema(page: SchemaPage): object {
-  const base = SITE.url.replace(/\/$/, "");
+function buildRestaurantSchema(page: SchemaPage, brandName: string, siteUrl: string): object {
+  const base = siteUrl.replace(/\/$/, "");
+  return {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    name: brandName,
+    url: `${base}${page.targetPage}`,
+    description: `${brandName}. ${page.keywords.slice(0, 2).join(", ")}.`,
+    servesCuisine: "Middle Eastern",
+    priceRange: "$$",
+    hasMenu: `${base}/menu`,
+    brand: { "@type": "Brand", name: brandName },
+  };
+}
+
+function buildProductSchema(page: SchemaPage, brandName: string, siteUrl: string): object {
+  const base = siteUrl.replace(/\/$/, "");
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     name: page.group.replace("Brand – ", ""),
     url: `${base}${page.targetPage}`,
-    description: `${SITE.tagline}. ${page.keywords.slice(0, 2).join(" · ")}.`,
-    brand: {
-      "@type": "Brand",
-      name: SITE.name,
-    },
+    description: `${brandName}. ${page.keywords.slice(0, 2).join(" · ")}.`,
+    brand: { "@type": "Brand", name: brandName },
     offers: {
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      reviewCount: "124",
-      bestRating: "5",
-    },
   };
 }
 
-function buildFaqSchema(faqs: { question: string; answer: string }[]): object {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({
-      "@type": "Question",
-      name: f.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: f.answer,
-      },
-    })),
-  };
-}
-
-function buildOrganizationSchema(): object {
+function buildOrganizationSchema(brandName: string, siteUrl: string): object {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: SITE.name,
-    url: SITE.url,
-    description: SITE.tagline,
+    name: brandName,
+    url: siteUrl,
     sameAs: [],
   };
 }
 
-export function generateAllSchemas(): Record<string, object> {
+function schemaForGroup(page: SchemaPage, brandName: string, siteUrl: string, brandType?: string): object {
+  if (page.schemaType === "Restaurant") return buildRestaurantSchema(page, brandName, siteUrl);
+  if (page.schemaType === "SoftwareApplication") return buildSoftwareSchema(page, brandName, siteUrl);
+  return buildProductSchema(page, brandName, siteUrl);
+}
+
+export function generateAllSchemas(brand?: BrandConfig): Record<string, object> {
+  const brandName = brand?.name ?? SITE.name;
+  const siteUrl = brand?.siteUrl ?? SITE.url;
+  const groups: SchemaPage[] = (brand?.keywordGroups ?? KEYWORD_GROUPS).map((g) => ({
+    group: g.group,
+    targetPage: g.targetPage,
+    schemaType: g.schemaType,
+    keywords: g.keywords,
+  }));
+
   const schemas: Record<string, object> = {
-    organization: buildOrganizationSchema(),
+    organization: buildOrganizationSchema(brandName, siteUrl),
   };
 
-  for (const group of KEYWORD_GROUPS) {
-    const key = group.targetPage.replace("/", "");
-    schemas[key] =
-      group.schemaType === "SoftwareApplication"
-        ? buildSoftwareSchema(group)
-        : buildProductSchema(group);
+  for (const group of groups) {
+    const key = group.targetPage.replace(/\//g, "") || "home";
+    schemas[key] = schemaForGroup(group, brandName, siteUrl, brand?.type);
   }
 
   return schemas;
 }
 
-export function saveSchemas(outputDir?: string): string {
-  const dir = outputDir ?? path.join(process.cwd(), "output", "schema");
+export function saveSchemas(brand?: BrandConfig, outputDir?: string): string {
+  const dir = outputDir
+    ? path.join(outputDir, "schema")
+    : path.join(process.cwd(), "output", "schema");
   fs.mkdirSync(dir, { recursive: true });
 
-  const schemas = generateAllSchemas();
+  const schemas = generateAllSchemas(brand);
   for (const [name, schema] of Object.entries(schemas)) {
     const filePath = path.join(dir, `${name}.jsonld`);
     const scriptTag = `<script type="application/ld+json">\n${JSON.stringify(schema, null, 2)}\n</script>`;

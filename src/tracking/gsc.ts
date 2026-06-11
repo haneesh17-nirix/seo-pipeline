@@ -15,16 +15,21 @@ interface StoredHistory {
   [keyword: string]: GscRow[];
 }
 
-const HISTORY_FILE = path.join(process.cwd(), "data", "rank-history.json");
-
-function loadHistory(): StoredHistory {
-  if (!fs.existsSync(HISTORY_FILE)) return {};
-  return JSON.parse(fs.readFileSync(HISTORY_FILE, "utf8"));
+function historyFile(brandSlug?: string): string {
+  if (brandSlug) return path.join(process.cwd(), "brands", brandSlug, "logs", "rank-history.json");
+  return path.join(process.cwd(), "data", "rank-history.json");
 }
 
-function saveHistory(h: StoredHistory): void {
-  fs.mkdirSync(path.dirname(HISTORY_FILE), { recursive: true });
-  fs.writeFileSync(HISTORY_FILE, JSON.stringify(h, null, 2), "utf8");
+function loadHistory(brandSlug?: string): StoredHistory {
+  const file = historyFile(brandSlug);
+  if (!fs.existsSync(file)) return {};
+  return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
+function saveHistory(h: StoredHistory, brandSlug?: string): void {
+  const file = historyFile(brandSlug);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(h, null, 2), "utf8");
 }
 
 function getAuthClient() {
@@ -118,36 +123,36 @@ export async function fetchGscData(
 
 export async function trackAndSave(
   keywords: string[],
-  country: string = "in"
+  country: string = "in",
+  brandSlug?: string
 ): Promise<GscRow[]> {
-  // GSC uses 3-letter country codes
   const countryCode = country.length === 2
-    ? { us: "usa", in: "ind", gb: "gbr", au: "aus", ca: "can" }[country] ?? country
+    ? { us: "usa", in: "ind", gb: "gbr", au: "aus", ca: "can", ae: "are" }[country] ?? country
     : country;
 
   console.log(`\nFetching GSC data for ${keywords.length} keywords...\n`);
   const results = await fetchGscData(keywords, countryCode);
 
-  const history = loadHistory();
+  const history = loadHistory(brandSlug);
   for (const row of results) {
     if (!history[row.keyword]) history[row.keyword] = [];
     history[row.keyword].push(row);
     if (history[row.keyword].length > 90) history[row.keyword].shift();
   }
-  saveHistory(history);
+  saveHistory(history, brandSlug);
 
   return results;
 }
 
-export function getHistory(keyword: string): GscRow[] {
-  return loadHistory()[keyword] ?? [];
+export function getHistory(keyword: string, brandSlug?: string): GscRow[] {
+  return loadHistory(brandSlug)[keyword] ?? [];
 }
 
-export function getPositionDelta(keyword: string): number | null {
-  const entries = getHistory(keyword);
+export function getPositionDelta(keyword: string, brandSlug?: string): number | null {
+  const entries = getHistory(keyword, brandSlug);
   if (entries.length < 2) return null;
   const a = entries[entries.length - 2].position;
   const b = entries[entries.length - 1].position;
   if (!a || !b) return null;
-  return b - a; // negative = moved up
+  return b - a;
 }

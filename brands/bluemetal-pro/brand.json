@@ -1,0 +1,39 @@
+{
+  "slug": "bluemetal-pro",
+  "name": "BlueMetal Pro",
+  "type": "saas",
+  "siteUrl": "https://www.blumetal.pro",
+  "gscSiteUrl": "https://www.blumetal.pro",
+  "gscCredentialsFile": "./brands/bluemetal-pro/gsc-credentials.json",
+  "targetCountry": "in",
+  "gscCountryCode": "ind",
+  "languages": ["en"],
+  "ollamaModel": "llama3.2",
+  "keywordGroups": [
+    {
+      "group": "Crusher Apps",
+      "keywords": [
+        "best crusher app", "crusher apps", "crusher application",
+        "top crusher software", "BlueMetal Pro crusher app", "crusher management software"
+      ],
+      "targetPage": "/crusher-app",
+      "schemaType": "SoftwareApplication"
+    },
+    {
+      "group": "Brand",
+      "keywords": ["BlueMetal Pro", "BlueMetal Pro software", "BlueMetal Pro app", "BlueMetal Pro review"],
+      "targetPage": "/",
+      "schemaType": "SoftwareApplication"
+    }
+  ],
+  "pages": [
+    { "path": "/", "label": "Home" },
+    { "path": "/crusher-app", "label": "Crusher App" },
+    { "path": "/pricing", "label": "Pricing" },
+    { "path": "/about", "label": "About" }
+  ],
+  "apiEndpoints": [
+    { "method": "GET", "path": "/api/health", "expect": 200, "label": "Health check" },
+    { "method": "GET", "path": "/api/crushers", "expect": 200, "label": "Crushers API" }
+  ]
+}
