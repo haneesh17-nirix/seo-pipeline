@@ -57,3 +57,11 @@ Changed files: docs/API.md
 ### 2026-06-11 — chore: sync local automation output
 
 Changed files: docs/API.md
+
+### 2026-06-19 — chore: sync automation output after domain update
+
+Changed files: docs/API.md
+
+### 2026-06-19 — chore: sync automation output after domain update
+
+Changed files: docs/API.md

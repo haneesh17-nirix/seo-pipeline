@@ -117,3 +117,11 @@ CLI --brand <slug>
 ### 2026-06-19 — vfdb0589 — feat(nyrix): update domain to nirixtracking.in, reset GSC credentials
 
 - feat(nyrix): update domain to nirixtracking.in, reset GSC credentials (files: brands/nyrix/brand.json)
+
+### 2026-06-19 — vea6ce8f — chore: sync automation output after domain update
+
+- chore: sync automation output after domain update (files: package.json)
+
+### 2026-06-19 — vea6ce8f — chore: sync automation output after domain update
+
+- chore: sync automation output after domain update (files: package.json)
