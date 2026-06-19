@@ -2,6 +2,13 @@
 
 Detailed record of every change deployed.
 
+## v1.8.3 — 2026-06-19 21:35:53
+**Commit:** `102ab32` — chore: sync pending automation docs  
+**Author:** haneesh.pulliyerangatte  
+**Type:** chore  
+**Files changed:** 4 total
+- Modified: docs/API.md, docs/ARCHITECTURE.md, docs/CHANGELOG.md, package.json
+---
 ## v1.8.2 — 2026-06-19 21:28:38
 **Commit:** `557c2d7` — chore: sync automation docs  
 **Author:** haneesh.pulliyerangatte  

@@ -97,3 +97,7 @@ Changed files: docs/API.md
 ### 2026-06-19 — chore: sync automation docs
 
 Changed files: docs/API.md
+
+### 2026-06-19 — chore: sync pending automation docs
+
+Changed files: docs/API.md
