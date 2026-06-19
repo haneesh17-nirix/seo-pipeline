@@ -371,7 +371,7 @@ program
             const keywords = brand.keywordGroups.flatMap((g) => g.keywords);
             const rankResults = await trackAndSave(keywords, brand.targetCountry, brand.slug);
             const reportDir = brandOutputDir(slug, "reports");
-            const file = saveReport(rankResults, reportDir, brand.name);
+            const file = saveReport(rankResults, reportDir, brand);
             const ranked = rankResults.filter((r) => r.position > 0).length;
             console.log(`  ✓ ${ranked}/${rankResults.length} keywords ranked → ${path.relative(process.cwd(), file)}`);
             steps.push(`track: ${ranked}/${rankResults.length} ranked`);

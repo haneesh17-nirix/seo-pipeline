@@ -71,14 +71,16 @@ export function generateMarkdownReport(results: GscRow[], brand?: BrandConfig): 
   return lines.join("\n");
 }
 
-export function saveReport(results: GscRow[], reportDir?: string, brandName?: string): string {
+export function saveReport(results: GscRow[], reportDir?: string, brand?: BrandConfig | string): string {
   const date = new Date().toISOString().split("T")[0];
   const dir = reportDir ?? path.join(process.cwd(), "reports");
   fs.mkdirSync(dir, { recursive: true });
 
   const mdPath = path.join(dir, `report-${date}.md`);
-  const brand = brandName ? ({ name: brandName } as Partial<BrandConfig>) : undefined;
-  fs.writeFileSync(mdPath, generateMarkdownReport(results, brand as BrandConfig | undefined), "utf8");
+  const resolvedBrand: BrandConfig | undefined = typeof brand === "string"
+    ? ({ name: brand } as Partial<BrandConfig> as BrandConfig)
+    : brand;
+  fs.writeFileSync(mdPath, generateMarkdownReport(results, resolvedBrand), "utf8");
 
   const jsonPath = path.join(dir, `data-${date}.json`);
   fs.writeFileSync(jsonPath, JSON.stringify(results, null, 2), "utf8");
