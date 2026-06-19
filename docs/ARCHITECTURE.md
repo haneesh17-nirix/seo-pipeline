@@ -125,3 +125,19 @@ CLI --brand <slug>
 ### 2026-06-19 — vea6ce8f — chore: sync automation output after domain update
 
 - chore: sync automation output after domain update (files: package.json)
+
+### 2026-06-19 — vc56942f — chore: sync docs
+
+- chore: sync docs (files: package.json)
+
+### 2026-06-19 — vc56942f — chore: sync docs
+
+- chore: sync docs (files: package.json)
+
+### 2026-06-19 — v63a4730 — feat(nyrix): update domain to nirixtracking.in
+
+- feat(nyrix): update domain to nirixtracking.in (files: brands/nyrix/brand.json, package.json)
+
+### 2026-06-19 — v63a4730 — feat(nyrix): update domain to nirixtracking.in
+
+- feat(nyrix): update domain to nirixtracking.in (files: brands/nyrix/brand.json, package.json)

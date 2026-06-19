@@ -2,6 +2,36 @@
 
 Detailed record of every change deployed.
 
+## v1.8.0 — 2026-06-19 21:26:59
+**Commit:** `63a4730` — feat(nyrix): update domain to nirixtracking.in  
+**Author:** haneesh.pulliyerangatte  
+**Type:** feat  
+**Files changed:** 8 total
+- New: docs/CHANGELOG.md, docs/UI_DESIGN_PATTERNS.md
+- Modified: brands/nyrix/brand.json, docs/API.md, docs/ARCHITECTURE.md, docs/CHANGE-LOG.md, docs/DESIGN.md, package.json
+---
+## v1.8.0 — 2026-06-19 21:26:53
+**Commit:** `63a4730` — feat(nyrix): update domain to nirixtracking.in  
+**Author:** haneesh.pulliyerangatte  
+**Type:** feat  
+**Files changed:** 8 total
+- New: docs/CHANGELOG.md, docs/UI_DESIGN_PATTERNS.md
+- Modified: brands/nyrix/brand.json, docs/API.md, docs/ARCHITECTURE.md, docs/CHANGE-LOG.md, docs/DESIGN.md, package.json
+---
+## v1.7.2 — 2026-06-19 21:26:40
+**Commit:** `c56942f` — chore: sync docs  
+**Author:** haneesh.pulliyerangatte  
+**Type:** chore  
+**Files changed:** 4 total
+- Modified: docs/API.md, docs/ARCHITECTURE.md, docs/CHANGELOG.md, package.json
+---
+## v1.7.2 — 2026-06-19 21:26:33
+**Commit:** `c56942f` — chore: sync docs  
+**Author:** haneesh.pulliyerangatte  
+**Type:** chore  
+**Files changed:** 4 total
+- Modified: docs/API.md, docs/ARCHITECTURE.md, docs/CHANGELOG.md, package.json
+---
 ## v1.7.1 — 2026-06-19 21:26:24
 **Commit:** `ea6ce8f` — chore: sync automation output after domain update  
 **Author:** haneesh.pulliyerangatte  

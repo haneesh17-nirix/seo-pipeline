@@ -65,3 +65,19 @@ Changed files: docs/API.md
 ### 2026-06-19 — chore: sync automation output after domain update
 
 Changed files: docs/API.md
+
+### 2026-06-19 — chore: sync docs
+
+Changed files: docs/API.md
+
+### 2026-06-19 — chore: sync docs
+
+Changed files: docs/API.md
+
+### 2026-06-19 — feat(nyrix): update domain to nirixtracking.in
+
+Changed files: docs/API.md
+
+### 2026-06-19 — feat(nyrix): update domain to nirixtracking.in
+
+Changed files: docs/API.md
