@@ -89,3 +89,31 @@ CLI --brand <slug>
 ### 2026-06-11 — vf4aa4b5 — feat: multi-brand SEO pipeline with per-brand isolation
 
 - feat: multi-brand SEO pipeline with per-brand isolation (files: brands/bluemetal-pro/brand.json, brands/habun-rak/brand.json, brands/habun-sharjah/brand.json, brands/nyrix/brand.json, src/brands/loader.ts)
+
+### 2026-06-11 — ve8590b5 — feat: automate full SEO pipeline — run-all command, shell script, cron, GitHub Actions
+
+- feat: automate full SEO pipeline — run-all command, shell script, cron, GitHub Actions (files: .github/workflows/weekly-pipeline.yml, .github/workflows/weekly-track.yml, src/cli.ts)
+
+### 2026-06-11 — ve8590b5 — feat: automate full SEO pipeline — run-all command, shell script, cron, GitHub Actions
+
+- feat: automate full SEO pipeline — run-all command, shell script, cron, GitHub Actions (files: .github/workflows/weekly-pipeline.yml, .github/workflows/weekly-track.yml, src/cli.ts)
+
+### 2026-06-11 — v34674bd — feat: OAuth2 browser auth flow for GSC — bypasses service account key org policy
+
+- feat: OAuth2 browser auth flow for GSC — bypasses service account key org policy (files: src/cli.ts, src/tracking/gsc.ts)
+
+### 2026-06-11 — v34674bd — feat: OAuth2 browser auth flow for GSC — bypasses service account key org policy
+
+- feat: OAuth2 browser auth flow for GSC — bypasses service account key org policy (files: src/cli.ts, src/tracking/gsc.ts)
+
+### 2026-06-19 — vfdb0589 — feat(nyrix): update domain to nirixtracking.in, reset GSC credentials
+
+- feat(nyrix): update domain to nirixtracking.in, reset GSC credentials (files: brands/nyrix/brand.json)
+
+### 2026-06-19 — vfdb0589 — feat(nyrix): update domain to nirixtracking.in, reset GSC credentials
+
+- feat(nyrix): update domain to nirixtracking.in, reset GSC credentials (files: brands/nyrix/brand.json)
+
+### 2026-06-19 — vfdb0589 — feat(nyrix): update domain to nirixtracking.in, reset GSC credentials
+
+- feat(nyrix): update domain to nirixtracking.in, reset GSC credentials (files: brands/nyrix/brand.json)
