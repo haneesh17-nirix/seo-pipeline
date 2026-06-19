@@ -149,3 +149,11 @@ CLI --brand <slug>
 ### 2026-06-19 — v6df48d5 — chore: final sync
 
 - chore: final sync (files: package.json)
+
+### 2026-06-19 — v557c2d7 — chore: sync automation docs
+
+- chore: sync automation docs (files: package.json)
+
+### 2026-06-19 — v557c2d7 — chore: sync automation docs
+
+- chore: sync automation docs (files: package.json)
