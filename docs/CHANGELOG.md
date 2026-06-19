@@ -2,6 +2,20 @@
 
 Detailed record of every change deployed.
 
+## v1.8.1 — 2026-06-19 21:28:16
+**Commit:** `6df48d5` — chore: final sync  
+**Author:** haneesh.pulliyerangatte  
+**Type:** chore  
+**Files changed:** 5 total
+- Modified: docs/API.md, docs/ARCHITECTURE.md, docs/CHANGELOG.md, docs/UI_DESIGN_PATTERNS.md, package.json
+---
+## v1.8.1 — 2026-06-19 21:27:59
+**Commit:** `6df48d5` — chore: final sync  
+**Author:** haneesh.pulliyerangatte  
+**Type:** chore  
+**Files changed:** 5 total
+- Modified: docs/API.md, docs/ARCHITECTURE.md, docs/CHANGELOG.md, docs/UI_DESIGN_PATTERNS.md, package.json
+---
 ## v1.8.0 — 2026-06-19 21:26:59
 **Commit:** `63a4730` — feat(nyrix): update domain to nirixtracking.in  
 **Author:** haneesh.pulliyerangatte  

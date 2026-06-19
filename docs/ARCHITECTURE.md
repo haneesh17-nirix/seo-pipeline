@@ -141,3 +141,11 @@ CLI --brand <slug>
 ### 2026-06-19 — v63a4730 — feat(nyrix): update domain to nirixtracking.in
 
 - feat(nyrix): update domain to nirixtracking.in (files: brands/nyrix/brand.json, package.json)
+
+### 2026-06-19 — v6df48d5 — chore: final sync
+
+- chore: final sync (files: package.json)
+
+### 2026-06-19 — v6df48d5 — chore: final sync
+
+- chore: final sync (files: package.json)
