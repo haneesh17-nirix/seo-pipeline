@@ -58,80 +58,157 @@ export const CONTENT_PARAMETERS = {
     "use concrete before/after examples",
     "reference expert or tradesperson perspective",
   ],
+
+  // ── Literary influence ──────────────────────────────────────────────────────
+  // Draw on a specific author's narrative sensibility — not to copy or quote,
+  // but to absorb their texture: sentence rhythm, emotional register, world-view.
+  literaryInfluence: [
+    // Indian literature — warmth, small-town life, the ordinary made rich
+    "R.K. Narayan — gentle, unhurried, finds comedy and dignity in everyday Indian life",
+    "Ruskin Bond — nostalgic, sensory, writes as if memory itself has a smell",
+    "Arundhati Roy — lyrical and dense, notices what others walk past, politically alive",
+    "Premchand — social realism, working-class dignity, plain truth told plainly",
+    "Manto — raw, uncomfortable honesty, no sentiment wasted, cuts straight to the nerve",
+    // Global literature — diverse rhythms
+    "Hemingway — sparse, declarative, the iceberg theory: what's unsaid carries the weight",
+    "Chekhov — quietly devastating, character over plot, nothing resolved, everything felt",
+    "Maya Angelou — empowering, rhythmic, the personal is universal, joy hard-earned",
+    "Roald Dahl — mischievous wit, dark undercurrent, reader is always slightly off-balance",
+    "Terry Pratchett — footnote humour, absurdist logic that somehow explains everything",
+    "Toni Morrison — rich, layered, language that holds community memory inside it",
+    "Gabriel García Márquez — magical realism, the mundane and the miraculous at the same temperature",
+    "Haruki Murakami — detached cool, surreal domesticity, loneliness as texture not tragedy",
+    "David Sedaris — self-deprecating, confessional, funny in a way that makes you wince",
+  ],
+
+  // ── Language register ───────────────────────────────────────────────────────
+  // Controls vocabulary, syntax informality, cultural coding, and generation voice.
+  languageRegister: [
+    // Formal end
+    "standard formal prose — complete sentences, measured vocabulary, no contractions",
+    "professional warm — polished but approachable, like a knowledgeable friend who happens to be an expert",
+    // Middle ground
+    "everyday conversational — contractions fine, short sentences, feels like spoken word on paper",
+    "Hinglish natural — English prose with occasional Hindi/Malayalam words that fit naturally (accha, yaar, swalpa, nalla), never forced",
+    // Informal / generational
+    "millennial self-aware — slightly ironic, parenthetical asides, comfortable with cultural references",
+    "Gen Z register — lowercase acceptable, short punchy sentences, 'ngl', 'fr', 'no cap', ellipsis for effect... uses line breaks as punctuation",
+  ],
+
+  // ── Experience and emotional texture ───────────────────────────────────────
+  // The felt quality of reading the piece — the emotional after-taste.
+  experienceTone: [
+    "awed and wonder-filled — written as if the subject genuinely amazes the writer, small things feel significant",
+    "subtle and understated — says less than it means, trusts the reader to feel the weight, no exclamation marks",
+    "cheesy and unashamedly fun — puns welcome, exclamation marks earned, warmth dialled up, reader should smile",
+    "earnest and sincere — no irony, no distance, means every word, vulnerable in the good way",
+    "playfully irreverent — gently pokes fun at the category, a little cheeky, reader feels in on the joke",
+  ],
+
+  // ── Annotation and typographic personality ──────────────────────────────────
+  // How the writer uses the page: punctuation as personality, rhythm through formatting.
+  annotationStyle: [
+    "clean flowing prose — no special punctuation, paragraphs breathe, traditional essay feel",
+    "em-dash interruptions — uses — this — to break rhythm, creates spontaneous asides mid-sentence",
+    "parenthetical whispers — frequent (and sometimes lengthy) parenthetical asides, like a second voice in brackets",
+    "emoji as light punctuation — 1–3 emojis per section used functionally not decoratively, like a modern street sign",
+    "ellipsis pacing — uses... to create pause, let ideas land, trail off deliberately... then return",
+    "asterisk and *emphasis* — *italics-style* emphasis via asterisks, occasional ALL CAPS for a beat, visual texture in the prose",
+  ],
 } as const;
 
 export type ParameterKey = keyof typeof CONTENT_PARAMETERS;
 export type ContentParams = { [K in ParameterKey]: string };
 
-// ── Combination tracking ──────────────────────────────────────────────────────
-// Stores used combinations per brand+contentType in a JSON state file.
-// Uses a Fisher-Yates shuffle seeded per brand so the sequence is consistent
-// across machines (same brand always gets same shuffled order).
+// ── Index-based combination arithmetic ───────────────────────────────────────
+// Never materialises the full combination list in memory.
+// Uses mixed-radix decoding: treat any integer index as a "number" where each
+// digit position selects one value from one dimension.
 
-function stateFilePath(brandSlug: string, contentType: string): string {
-  return path.join(
-    process.cwd(),
-    "brands",
-    brandSlug,
-    "logs",
-    `param-state-${contentType}.json`
-  );
+const PARAM_KEYS = Object.keys(CONTENT_PARAMETERS) as ParameterKey[];
+const PARAM_SIZES = PARAM_KEYS.map((k) => CONTENT_PARAMETERS[k].length);
+
+export function countCombinations(): number {
+  return PARAM_SIZES.reduce((acc, n) => acc * n, 1);
 }
 
+// Decode a flat index into a ContentParams object — O(dimensions), no allocation
+export function nthCombination(index: number): ContentParams {
+  const total = countCombinations();
+  let n = ((index % total) + total) % total; // handle negatives
+  const result: Partial<ContentParams> = {};
+  for (let i = PARAM_KEYS.length - 1; i >= 0; i--) {
+    const key = PARAM_KEYS[i];
+    const size = PARAM_SIZES[i];
+    result[key] = CONTENT_PARAMETERS[key][n % size] as string;
+    n = Math.floor(n / size);
+  }
+  return result as ContentParams;
+}
+
+// ── Seeded LCG permutation (no array, O(1) per call) ─────────────────────────
+// Maps cursor position → shuffled combination index using a full-period LCG.
+// LCG: f(x) = (step * x + offset) % total
+// Full-period guaranteed when gcd(step, total) = 1.
+// We pick step = a prime not in the prime factors of total, verified at runtime.
+
+function seedToInt(seed: string): number {
+  return parseInt(crypto.createHash("md5").update(seed).digest("hex").slice(0, 8), 16);
+}
+
+function gcd(a: number, b: number): number {
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
+}
+
+// Find a step value coprime with total, seeded for variety across cycles
+function findStep(total: number, seed: number): number {
+  // Start with a large-ish odd number derived from seed, walk until coprime
+  let step = (seed % total) | 1; // ensure odd
+  if (step < 3) step = 3;
+  while (gcd(step, total) !== 1) step += 2;
+  return step;
+}
+
+function lcgPermute(cursor: number, step: number, offset: number, total: number): number {
+  // LCG step: each cursor maps to a unique index in [0, total)
+  return ((cursor * step + offset) % total + total) % total;
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
 interface ParamState {
-  queue: number[];   // indices into the flat combination list, pre-shuffled
-  cursor: number;    // next index to use
+  cursor: number;
+  cycle: number;
+  step: number;
+  offset: number;
   totalCombinations: number;
 }
 
-function buildAllCombinations(): ContentParams[] {
-  const keys = Object.keys(CONTENT_PARAMETERS) as ParameterKey[];
-  const values = keys.map((k) => [...CONTENT_PARAMETERS[k]]);
-
-  function recurse(idx: number, current: Partial<ContentParams>): ContentParams[] {
-    if (idx === keys.length) return [current as ContentParams];
-    return values[idx].flatMap((v) =>
-      recurse(idx + 1, { ...current, [keys[idx]]: v })
-    );
-  }
-  return recurse(0, {});
-}
-
-// Deterministic shuffle using brand slug as seed (mulberry32)
-function seededShuffle(arr: number[], seed: string): number[] {
-  const result = [...arr];
-  let s = parseInt(crypto.createHash("md5").update(seed).digest("hex").slice(0, 8), 16);
-  const rand = () => {
-    s = Math.imul(s ^ (s >>> 15), s | 1);
-    s ^= s + Math.imul(s ^ (s >>> 7), s | 61);
-    return ((s ^ (s >>> 14)) >>> 0) / 4294967296;
-  };
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
+function stateFilePath(brandSlug: string, contentType: string): string {
+  return path.join(process.cwd(), "brands", brandSlug, "logs", `param-state-${contentType}.json`);
 }
 
 function loadState(brandSlug: string, contentType: string): ParamState {
+  const total = countCombinations();
   const file = stateFilePath(brandSlug, contentType);
-  const allCombos = buildAllCombinations();
-  const total = allCombos.length;
 
   if (fs.existsSync(file)) {
     try {
       const s = JSON.parse(fs.readFileSync(file, "utf8")) as ParamState;
       if (s.totalCombinations === total) return s;
-      // Parameter matrix changed — reset
+      // Matrix changed (new params added) — reset
     } catch {}
   }
 
-  // Fresh state: build shuffled queue seeded by brand+contentType
-  const queue = seededShuffle(
-    Array.from({ length: total }, (_, i) => i),
-    `${brandSlug}:${contentType}`
-  );
-  return { queue, cursor: 0, totalCombinations: total };
+  const seed = seedToInt(`${brandSlug}:${contentType}:0`);
+  return {
+    cursor: 0,
+    cycle: 0,
+    step: findStep(total, seed),
+    offset: seed % total,
+    totalCombinations: total,
+  };
 }
 
 function saveState(brandSlug: string, contentType: string, state: ParamState): void {
@@ -142,54 +219,45 @@ function saveState(brandSlug: string, contentType: string, state: ParamState): v
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-/**
- * Returns the next unique parameter combination for this brand + content type.
- * Advances the cursor and saves state. When all combinations are exhausted,
- * re-shuffles (different seed) and starts a new cycle.
- */
-export function nextParams(brandSlug: string, contentType: string): ContentParams & { _meta: { index: number; cycle: number; totalCombinations: number } } {
-  const allCombos = buildAllCombinations();
+export function nextParams(
+  brandSlug: string,
+  contentType: string
+): ContentParams & { _meta: { index: number; cycle: number; totalCombinations: number } } {
   const state = loadState(brandSlug, contentType);
 
-  // End of queue → new cycle with re-shuffle
-  if (state.cursor >= state.queue.length) {
-    const cycleNum = Math.floor(state.cursor / state.totalCombinations) + 1;
-    state.queue = seededShuffle(
-      Array.from({ length: state.totalCombinations }, (_, i) => i),
-      `${brandSlug}:${contentType}:cycle${cycleNum}`
-    );
+  // New cycle when we've exhausted all combinations
+  if (state.cursor >= state.totalCombinations) {
+    const newCycle = state.cycle + 1;
+    const seed = seedToInt(`${brandSlug}:${contentType}:${newCycle}`);
     state.cursor = 0;
+    state.cycle = newCycle;
+    state.step = findStep(state.totalCombinations, seed);
+    state.offset = seed % state.totalCombinations;
   }
 
-  const idx = state.queue[state.cursor];
-  const params = allCombos[idx];
-  const cycle = Math.floor(state.cursor / state.totalCombinations);
+  const idx = lcgPermute(state.cursor, state.step, state.offset, state.totalCombinations);
+  const params = nthCombination(idx);
+  const cycle = state.cycle;
   state.cursor += 1;
   saveState(brandSlug, contentType, state);
 
   return { ...params, _meta: { index: idx, cycle, totalCombinations: state.totalCombinations } };
 }
 
-/**
- * Preview the next N parameter sets without advancing the cursor.
- */
 export function previewNextParams(brandSlug: string, contentType: string, n = 5): ContentParams[] {
-  const allCombos = buildAllCombinations();
   const state = loadState(brandSlug, contentType);
   const results: ContentParams[] = [];
   let cursor = state.cursor;
 
   for (let i = 0; i < n; i++) {
-    if (cursor >= state.queue.length) cursor = 0;
-    results.push(allCombos[state.queue[cursor]]);
+    const wrappedCursor = cursor % state.totalCombinations;
+    const idx = lcgPermute(wrappedCursor, state.step, state.offset, state.totalCombinations);
+    results.push(nthCombination(idx));
     cursor++;
   }
   return results;
 }
 
-/**
- * Returns stats about how many combinations exist and how many have been used.
- */
 export function paramStats(brandSlug: string, contentType: string): {
   total: number;
   used: number;

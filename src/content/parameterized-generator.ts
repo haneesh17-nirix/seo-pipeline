@@ -48,24 +48,48 @@ TARGET KEYWORD: "${keyword}"
 ${serviceCategory ? `SERVICE CATEGORY: ${serviceCategory}` : ""}
 LOCAL CONTEXT: ${localContext}
 
-WRITING PARAMETERS (follow all of these precisely):
-- Tone: ${params.tone}
-- Perspective: ${params.perspective}
-- Structure: ${params.structure}
-- Opening hook: ${params.hook}
-- CTA style: ${params.ctaStyle}
-- Local depth: ${params.localDepth}
-- Target length: ${params.length}
-- Evidence style: ${params.evidence}
+WRITING PARAMETERS — follow every one of these precisely:
+
+TONE: ${params.tone}
+PERSPECTIVE: ${params.perspective}
+STRUCTURE: ${params.structure}
+OPENING HOOK: ${params.hook}
+CTA STYLE: ${params.ctaStyle}
+LOCAL DEPTH: ${params.localDepth}
+TARGET LENGTH: ${params.length}
+EVIDENCE STYLE: ${params.evidence}
+
+LITERARY INFLUENCE: ${params.literaryInfluence}
+  → Do not quote or name this author. Absorb their sensibility:
+    their sentence rhythm, the weight they give small moments,
+    their relationship with the reader. Let it colour the prose
+    without announcing itself.
+
+LANGUAGE REGISTER: ${params.languageRegister}
+  → This controls vocabulary, syntax, and cultural coding.
+    If the register includes vernacular words (yaar, accha, nalla etc.),
+    use them only where they feel genuinely natural — never forced,
+    never more than 2–3 per piece.
+
+EXPERIENCE TONE: ${params.experienceTone}
+  → This is the emotional after-taste of reading the piece.
+    A reader should finish and feel this, not be told it.
+
+ANNOTATION STYLE: ${params.annotationStyle}
+  → Let this shape how punctuation and formatting are used.
+    The page should have a typographic personality consistent
+    with this style throughout — not just in one section.
 ${job.extraContext ? `\nADDITIONAL CONTEXT:\n${job.extraContext}` : ""}
 
-RULES:
-- Never keyword-stuff. The target keyword appears naturally 2–3 times maximum.
-- Every paragraph must add genuine value — no filler sentences.
-- Local references must be accurate and specific (real areas, real context).
+HARD RULES:
+- The target keyword appears naturally 2–3 times maximum. Never stuffed.
+- Every paragraph earns its place — no filler, no padding.
+- Local references must be real: actual areas, real seasonal context, genuine cultural moments.
 - Do not mention AI, automation, or that this was generated.
-- Do not repeat the same sentence structure twice in a row.
-- End with a single clear CTA matching the cta_style parameter above.
+- Never repeat the same sentence structure twice in a row.
+- The literary influence, register, and annotation style must be consistent
+  throughout — not applied to one paragraph and then abandoned.
+- End with a single CTA matching the cta_style above.
 `.trim();
 
   const typeInstructions: Record<ContentType, string> = {
