@@ -14,6 +14,16 @@ import { saveReport, printConsoleReport } from "./reports/reporter";
 import { saveSitemap } from "./seo/sitemap";
 import { saveSchemas } from "./seo/schema";
 import type { ContentType } from "./keywords/config";
+import {
+  generateBatch,
+  blogJobsForBrand,
+  adJobsForBrand,
+  socialJobsForBrand,
+  faqJobsForBrand,
+  GenerateJob,
+  ContentType as PContentType,
+} from "./content/parameterized-generator";
+import { nextParams, paramStats, previewNextParams } from "./content/parameters";
 
 const CONTENT_TYPES: ContentType[] = ["blog-post", "landing-page", "meta-tags", "faq"];
 
@@ -421,6 +431,135 @@ program
     console.log(`${"═".repeat(width)}\n`);
     for (const r of results) {
       console.log(`  ${r.slug.padEnd(22)} ${r.steps.join("  ·  ")}`);
+    }
+    console.log();
+  });
+
+// ── generate-content: parameterized content generation with review queue ──────
+program
+  .command("generate-content")
+  .description("Generate content using the parameterized engine (blog, ads, social, FAQ)")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .option("-t, --type <type>", "Content type: blog-post | ad-copy | social-post | faq-page | all", "all")
+  .option("-k, --keyword <keyword>", "Single keyword (overrides batch mode)")
+  .option("-c, --city <city>", "City context for local content")
+  .option("-s, --service <service>", "Service category")
+  .action(async (opts) => {
+    const brand = resolveBrand(opts.brand);
+    const reviewDir = path.join(process.cwd(), "brands", brand.slug, "output", "review-queue");
+
+    console.log(`\n${"═".repeat(54)}`);
+    console.log(`  Sahayi Content Engine — ${brand.name}`);
+    console.log(`${"═".repeat(54)}\n`);
+
+    if (opts.keyword) {
+      // Single keyword mode
+      const type = (opts.type === "all" ? "blog-post" : opts.type) as PContentType;
+      const job: GenerateJob = {
+        brand,
+        contentType: type,
+        keyword: opts.keyword,
+        city: opts.city,
+        serviceCategory: opts.service,
+      };
+      console.log(`  Generating ${type} for: "${opts.keyword}"\n`);
+      const results = await generateBatch([job]);
+      const ok = results.filter((r) => !r.error).length;
+      console.log(`\n  ✓ ${ok} file(s) written to review queue`);
+      console.log(`  📁 ${reviewDir}\n`);
+      return;
+    }
+
+    // Batch mode — build jobs from brand config
+    let jobs: GenerateJob[] = [];
+    const type = opts.type as string;
+
+    if (type === "all" || type === "blog-post")    jobs.push(...blogJobsForBrand(brand));
+    if (type === "all" || type === "ad-copy")      jobs.push(...adJobsForBrand(brand));
+    if (type === "all" || type === "social-post")  jobs.push(...socialJobsForBrand(brand));
+    if (type === "all" || type === "faq-page")     jobs.push(...faqJobsForBrand(brand));
+
+    if (!jobs.length) {
+      console.error(`  No jobs found for type "${type}"`);
+      process.exit(1);
+    }
+
+    console.log(`  ${jobs.length} content jobs queued\n`);
+    const results = await generateBatch(jobs);
+    const ok = results.filter((r) => !r.error).length;
+    const failed = results.filter((r) => r.error).length;
+
+    console.log(`\n${"─".repeat(54)}`);
+    console.log(`  Done: ${ok} generated, ${failed} failed`);
+    console.log(`  Review queue: ${reviewDir}\n`);
+  });
+
+// ── review-queue: list pending review files ───────────────────────────────────
+program
+  .command("review-queue")
+  .description("List files pending human review")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .option("--approved", "Show approved files only")
+  .option("--pending", "Show pending files only (default)")
+  .action((opts) => {
+    const brand = resolveBrand(opts.brand);
+    const reviewDir = path.join(process.cwd(), "brands", brand.slug, "output", "review-queue");
+
+    if (!fs.existsSync(reviewDir)) {
+      console.log(`\n  No review queue yet for ${brand.name}. Run generate-content first.\n`);
+      return;
+    }
+
+    const files = fs.readdirSync(reviewDir).filter((f) => f.endsWith(".md"));
+    if (!files.length) {
+      console.log(`\n  Review queue is empty.\n`);
+      return;
+    }
+
+    const statusFilter = opts.approved ? "approved" : "pending_review";
+    const filtered = files.filter((f) => {
+      const content = fs.readFileSync(path.join(reviewDir, f), "utf8");
+      return content.includes(`status: ${statusFilter}`);
+    });
+
+    console.log(`\n  ${brand.name} — ${statusFilter.replace("_", " ")} (${filtered.length} files)\n`);
+    filtered.forEach((f, i) => {
+      const content = fs.readFileSync(path.join(reviewDir, f), "utf8");
+      const keyword = content.match(/keyword: "(.+)"/)?.[1] ?? "";
+      const type = content.match(/contentType: (.+)/)?.[1] ?? "";
+      const tone = content.match(/tone: "(.+)"/)?.[1]?.split(" ")[0] ?? "";
+      console.log(`  ${String(i + 1).padStart(3)}. [${type.padEnd(14)}] ${keyword.padEnd(40)} tone: ${tone}`);
+    });
+    console.log();
+  });
+
+// ── param-stats: show parameter combination usage stats ───────────────────────
+program
+  .command("param-stats")
+  .description("Show parameter combination coverage stats for a brand")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .option("-t, --type <type>", "Content type", "blog-post")
+  .option("--preview", "Preview next 5 parameter combinations")
+  .action((opts) => {
+    const brand = resolveBrand(opts.brand);
+    const stats = paramStats(brand.slug, opts.type);
+
+    console.log(`\n  ${brand.name} — Parameter Stats (${opts.type})`);
+    console.log(`  ${"─".repeat(40)}`);
+    console.log(`  Total combinations : ${stats.total.toLocaleString()}`);
+    console.log(`  Used this cycle    : ${stats.used.toLocaleString()}`);
+    console.log(`  Remaining          : ${stats.remaining.toLocaleString()}`);
+    console.log(`  Cycle progress     : ${stats.percentComplete}%`);
+
+    if (opts.preview) {
+      const previews = previewNextParams(brand.slug, opts.type, 5);
+      console.log(`\n  Next 5 parameter sets:`);
+      previews.forEach((p, i) => {
+        console.log(`\n  [${i + 1}] tone: ${p.tone}`);
+        console.log(`       structure: ${p.structure}`);
+        console.log(`       hook: ${p.hook}`);
+        console.log(`       length: ${p.length}`);
+      });
     }
     console.log();
   });

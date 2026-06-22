@@ -1,0 +1,95 @@
+{
+  "slug": "sahayi",
+  "name": "Sahayi",
+  "type": "marketplace",
+  "siteUrl": "https://www.sahayi.co.in",
+  "gscSiteUrl": "https://www.sahayi.co.in/",
+  "gscCredentialsFile": "./brands/sahayi/gsc-credentials.json",
+  "targetCountry": "in",
+  "gscCountryCode": "ind",
+  "languages": ["en", "ml", "hi"],
+  "ollamaModel": "llama3.2",
+  "tagline": "Trusted home services, on demand",
+  "description": "Sahayi connects homeowners with verified local service professionals — plumbers, electricians, cleaners, carpenters, and more — with transparent pricing and guaranteed quality.",
+  "serviceCategories": [
+    "plumbing", "electrical", "cleaning", "carpentry",
+    "painting", "appliance-repair", "pest-control", "landscaping"
+  ],
+  "targetCities": [
+    "Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur",
+    "Kannur", "Kollam", "Palakkad", "Alappuzha"
+  ],
+  "keywordGroups": [
+    {
+      "group": "Home Services",
+      "keywords": [
+        "home services app India", "on demand home services",
+        "home service booking app", "trusted home services",
+        "professional home services India"
+      ],
+      "targetPage": "/",
+      "schemaType": "Service"
+    },
+    {
+      "group": "Plumbing",
+      "keywords": [
+        "plumber near me Kerala", "plumbing services Kochi",
+        "emergency plumber Thiruvananthapuram", "pipe repair service Kerala",
+        "bathroom fitting service Kochi"
+      ],
+      "targetPage": "/services/plumbing",
+      "schemaType": "Service"
+    },
+    {
+      "group": "Electrical",
+      "keywords": [
+        "electrician near me Kerala", "electrical repair Kochi",
+        "home wiring service Kerala", "electrician Thiruvananthapuram",
+        "electrical installation service India"
+      ],
+      "targetPage": "/services/electrical",
+      "schemaType": "Service"
+    },
+    {
+      "group": "Cleaning",
+      "keywords": [
+        "home cleaning service Kerala", "deep cleaning Kochi",
+        "sofa cleaning service Thiruvananthapuram", "office cleaning Kerala",
+        "house cleaning service near me Kerala"
+      ],
+      "targetPage": "/services/cleaning",
+      "schemaType": "Service"
+    },
+    {
+      "group": "Brand",
+      "keywords": [
+        "Sahayi app", "Sahayi services", "Sahayi home services",
+        "Sahayi Kerala", "sahayi.co.in"
+      ],
+      "targetPage": "/",
+      "schemaType": "Service"
+    },
+    {
+      "group": "AEO Voice",
+      "keywords": [
+        "best plumber in Kochi", "who fixes AC in Kerala",
+        "how to book home services in Kerala",
+        "reliable electrician near me", "affordable cleaning service Kochi"
+      ],
+      "targetPage": "/services",
+      "schemaType": "FAQPage"
+    }
+  ],
+  "pages": [
+    { "path": "/", "label": "Home" },
+    { "path": "/services", "label": "Services" },
+    { "path": "/services/plumbing", "label": "Plumbing" },
+    { "path": "/services/electrical", "label": "Electrical" },
+    { "path": "/services/cleaning", "label": "Cleaning" },
+    { "path": "/services/carpentry", "label": "Carpentry" },
+    { "path": "/services/painting", "label": "Painting" },
+    { "path": "/pricing", "label": "Pricing" },
+    { "path": "/about", "label": "About" },
+    { "path": "/blog", "label": "Blog" }
+  ]
+}

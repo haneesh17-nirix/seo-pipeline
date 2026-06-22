@@ -11,7 +11,7 @@ export interface KeywordGroup {
 export interface BrandConfig {
   slug: string;
   name: string;
-  type: "restaurant" | "saas" | "ecommerce" | "other";
+  type: "restaurant" | "saas" | "ecommerce" | "marketplace" | "other";
   siteUrl: string;
   gscSiteUrl: string;
   gscCredentialsFile: string;
@@ -19,9 +19,13 @@ export interface BrandConfig {
   gscCountryCode: string;
   languages: string[];
   ollamaModel: string;
+  tagline?: string;
+  description?: string;
+  serviceCategories?: string[];
+  targetCities?: string[];
   keywordGroups: KeywordGroup[];
   pages: { path: string; label: string }[];
-  apiEndpoints: { method: string; path: string; expect: number; label: string }[];
+  apiEndpoints?: { method: string; path: string; expect: number; label: string }[];
 }
 
 const BRANDS_DIR = path.join(process.cwd(), "brands");
