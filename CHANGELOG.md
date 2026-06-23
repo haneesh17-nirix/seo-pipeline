@@ -3,6 +3,38 @@
 All notable changes to seo-pipeline are documented here.
 Format follows [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [2.1.0] — 2026-06-23
+
+### Added
+- **Azure Blob Storage static blog** (`src/publishing/blog.ts` — `azure-blob` adapter) — `$web` container, branded HTML with Article JSON-LD schema, OG tags, Kerala IST date, reading time, Noto Serif Malayalam font, CTA box; index auto-updated
+- **Human-behaviour publish scheduler** — Kerala IST timezone, seeded LCG randomness, WEEKDAY/WEEKEND posting windows with weights, cluster events, dead zone 2am–6am IST; 5-minute cron check
+- **Video production suites** — `generateVideoSuite()` in `src/video/generator.ts`; 40 scripts across 6 services in English/Malayalam/Manglish; Azure OpenAI for all generation
+- **Ghost CMS on Azure Container Apps** (`sahayi-ghost-blog.icyhill-15e4b439.centralindia.azurecontainerapps.io`) — Container App in `rg-sahayi-prod` reusing `sahayi-prod-env`; running with ephemeral SQLite until persistence is resolved
+- **`src/publishing/types.ts`** — shared `PublishItem` interface replacing the old `ReviewItem` from `telegram-bot`
+
+### Changed
+- `BLOG_ADAPTER` switched to `azure-blob` (Ghost uses ephemeral SQLite — data lost on container restart; switch back to `ghost` once PostgreSQL persistence is solved)
+- `src/video/generator.ts` — removed `telegram-bot` import; new `ContentItem` interface; `callLLM()` replaces direct Ollama fetch; Malayalam/Manglish language instruction builder
+- `src/publishing/meta.ts` and `youtube.ts` — import `PublishItem` from `./types` instead of telegram-bot
+- `src/cli.ts` — `generate-video --suite --language` flags; `parseReviewFile` imported from `discord-bot`
+- `infra/azure-openai.bicep` — model updated to `gpt-4.1-mini / 2025-04-14` (old gpt-4o-mini deprecated)
+- Azure OpenAI deployment name kept as `gpt-4o-mini` for API compatibility
+
+### Infrastructure
+- **`sahayi-seo-pipeline-rg`** (East US) — Azure OpenAI (`sahayi-seo-openai`) + blog storage (`sahayiblog3024`)
+- **`rg-sahayi-prod`** (Central India) — Container Apps env (`sahayi-prod-env`), PostgreSQL (`sahayi-prod-pg`), ACR (`sahayiprodacr`), Ghost Container App
+- `infra/deploy-static-blog.sh` — provisions `sahayiblog3024` storage account and enables static website
+- Custom Ghost Docker image (`sahayiprodacr.azurecr.io/ghost-pg:5-alpine`) — adds `pg` module via `--legacy-peer-deps`
+
+### Known Issues
+- Ghost Container App is running with **ephemeral SQLite** only. SQLite over Azure Files SMB fails (POSIX locking). PostgreSQL migration races on Ghost 5.130 (`knex-migrator` sets `locked=1` then `getState()` sees it and crashes). Fix: run a Container Apps Job to pre-init the DB before Ghost starts, or wait for an upstream Ghost fix.
+
+### Security
+- Discord bot token regenerated (old token was exposed in session logs)
+- `.env` gitignored; no credentials committed
+
+---
+
 ## [2.0.0] — 2026-06-23
 
 ### Added
