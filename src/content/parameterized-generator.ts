@@ -4,8 +4,8 @@ import { nextParams, ContentParams } from "./parameters";
 import { BrandConfig } from "../brands/loader";
 import { selectFragments, buildSynthesisPrompt, FragmentSelection } from "./synthesizer";
 import { indexCorpus, loadCorpus } from "./corpus";
+import { callLLM, llmProvider } from "../llm/provider";
 
-const OLLAMA_HOST = process.env.OLLAMA_HOST ?? "http://localhost:11434";
 const DEFAULT_MODEL = "llama3.2";
 
 export type ContentType =
@@ -190,19 +190,6 @@ Sign off as the Sahayi partnerships team.`,
   return typeInstructions[contentType] ?? "";
 }
 
-// ── Ollama call ───────────────────────────────────────────────────────────────
-
-async function callOllama(prompt: string, model: string): Promise<string> {
-  const res = await fetch(`${OLLAMA_HOST}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, prompt, stream: false }),
-    signal: AbortSignal.timeout(120000),
-  });
-  if (!res.ok) throw new Error(`Ollama ${res.status}: ${await res.text()}`);
-  const data = (await res.json()) as { response: string };
-  return data.response.trim();
-}
 
 // ── Review queue writer ───────────────────────────────────────────────────────
 
@@ -285,7 +272,7 @@ export async function generateContent(job: GenerateJob): Promise<GenerateResult>
   try {
     const prompt = buildPromptWithSynthesis(job, params, selection);
     const model = (job.brand as any).ollamaModel ?? DEFAULT_MODEL;
-    const content = await callOllama(prompt, model);
+    const content = await callLLM(prompt, model);
 
     const result: GenerateResult = {
       job, params, content, paramSummary, generatedAt,

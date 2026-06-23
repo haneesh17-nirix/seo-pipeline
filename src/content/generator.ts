@@ -1,11 +1,8 @@
-import fetch from "node-fetch";
 import * as fs from "fs";
 import * as path from "path";
 import { ContentType, SITE } from "../keywords/config";
 import type { BrandConfig } from "../brands/loader";
-
-const OLLAMA_HOST = process.env.OLLAMA_HOST ?? "http://localhost:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "llama3.2";
+import { callLLM, checkLLM } from "../llm/provider";
 
 export interface GenerateOptions {
   keyword: string;
@@ -17,24 +14,7 @@ export interface GenerateOptions {
 }
 
 async function ollamaGenerate(prompt: string): Promise<string> {
-  const res = await fetch(`${OLLAMA_HOST}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: OLLAMA_MODEL,
-      prompt,
-      stream: false,
-      options: { temperature: 0.7, num_predict: 2048 },
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Ollama error ${res.status}: ${text}`);
-  }
-
-  const data = (await res.json()) as { response: string };
-  return data.response.trim();
+  return callLLM(prompt);
 }
 
 function brandContext(brand?: BrandConfig) {
@@ -156,10 +136,5 @@ export async function batchGenerate(
 }
 
 export async function checkOllama(): Promise<boolean> {
-  try {
-    const res = await fetch(`${OLLAMA_HOST}/api/tags`);
-    return res.ok;
-  } catch {
-    return false;
-  }
+  return checkLLM();
 }
