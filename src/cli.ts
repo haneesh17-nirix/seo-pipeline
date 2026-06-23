@@ -24,7 +24,7 @@ import {
   ContentType as PContentType,
 } from "./content/parameterized-generator";
 import { nextParams, paramStats, previewNextParams } from "./content/parameters";
-import { startApprovalBot, getAllPending, updateReviewStatus } from "./approval/telegram-bot";
+import { startApprovalBot, getAllPending, updateReviewStatus } from "./approval/discord-bot";
 import { enqueueApproved, publishDueJobs, startScheduler, loadQueue } from "./publishing/scheduler";
 import { fetchUnrepliedComments, saveReplyDrafts } from "./publishing/meta";
 import { saveMetaAdDraft } from "./ads/google-ads";
@@ -618,16 +618,16 @@ program
     console.log();
   });
 
-// ── approve-bot: start Telegram approval bot ──────────────────────────────────
+// ── approve-bot: start Discord approval bot ───────────────────────────────────
 program
   .command("approve-bot")
-  .description("Start Telegram bot for owner approval of review queue")
+  .description("Start Discord bot for owner approval of review queue")
   .action(() => {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? "0");
-    if (!token) { console.error("TELEGRAM_BOT_TOKEN not set in .env"); process.exit(1); }
-    if (!ownerId) { console.error("TELEGRAM_OWNER_ID not set in .env"); process.exit(1); }
-    console.log("\n  Starting Telegram approval bot...");
+    const token = process.env.DISCORD_BOT_TOKEN;
+    const ownerId = process.env.DISCORD_OWNER_ID;
+    if (!token) { console.error("DISCORD_BOT_TOKEN not set in .env"); process.exit(1); }
+    if (!ownerId) { console.error("DISCORD_OWNER_ID not set in .env"); process.exit(1); }
+    console.log("\n  Starting Discord approval bot...");
     startApprovalBot(token, ownerId);
   });
 
@@ -716,7 +716,7 @@ program
         ? fs.readdirSync(reviewDir).filter((f) => f.endsWith(".md"))
         : [];
       const approved = files
-        .map((f) => { const { parseReviewFile } = require("./approval/telegram-bot"); return parseReviewFile(path.join(reviewDir, f)); })
+        .map((f) => { const { parseReviewFile } = require("./approval/discord-bot"); return parseReviewFile(path.join(reviewDir, f)); })
         .filter((item: any) => item?.status === "approved");
 
       if (!approved.length) { console.log("  No approved content found."); return; }

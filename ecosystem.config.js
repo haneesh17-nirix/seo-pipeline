@@ -7,7 +7,7 @@ const runner = `npx ts-node ${base}/src/cli.ts`;
 module.exports = {
   apps: [
     {
-      name: "sahayi-approve-bot",
+      name: "sahayi-discord-bot",
       script: "npx",
       args: `ts-node ${base}/src/cli.ts approve-bot`,
       cwd: base,
