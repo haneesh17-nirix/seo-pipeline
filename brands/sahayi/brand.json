@@ -10,22 +10,228 @@
   "languages": ["en", "ml", "hi"],
   "ollamaModel": "llama3.2",
   "tagline": "Trusted home services, on demand",
-  "description": "Sahayi connects homeowners with verified local service professionals — plumbers, electricians, cleaners, carpenters, and more — with transparent pricing and guaranteed quality.",
+  "description": "Sahayi connects homeowners with verified local service professionals — plumbers, electricians, cleaners, carpenters, and more — with transparent pricing and guaranteed quality. For professionals, Sahayi is the fastest way to find steady gig work in your city.",
+
   "serviceCategories": [
     "plumbing", "electrical", "cleaning", "carpentry",
-    "painting", "appliance-repair", "pest-control", "landscaping"
+    "painting", "appliance-repair", "pest-control", "ac-servicing",
+    "errand-running", "handyman", "landscaping", "moving-help"
   ],
+
   "targetCities": [
     "Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur",
-    "Kannur", "Kollam", "Palakkad", "Alappuzha"
+    "Kannur", "Kollam", "Palakkad", "Alappuzha",
+    "Kottayam", "Malappuram", "Kasaragod", "Pathanamthitta"
   ],
+
+  "locations": [
+    {
+      "city": "Kochi",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 9.9312,
+      "lng": 76.2673,
+      "pinCodes": ["682001", "682002", "682011", "682021", "682030"],
+      "localities": [
+        "Ernakulam", "Kakkanad", "Edappally", "Aluva", "Thrippunithura",
+        "Kalamassery", "Fort Kochi", "Panampilly Nagar", "Thevara",
+        "Marine Drive", "MG Road", "Vyttila", "Palarivattom", "Vytila"
+      ]
+    },
+    {
+      "city": "Thiruvananthapuram",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 8.5241,
+      "lng": 76.9366,
+      "pinCodes": ["695001", "695003", "695011", "695016", "695581"],
+      "localities": [
+        "Pattom", "Kowdiar", "Vellayambalam", "Kesavadasapuram",
+        "Kazhakkoottam", "Technopark", "Attingal", "Nemom",
+        "Thampanoor", "Sreekaryam", "Ulloor", "Thiruvallam"
+      ]
+    },
+    {
+      "city": "Kozhikode",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 11.2588,
+      "lng": 75.7804,
+      "pinCodes": ["673001", "673004", "673006", "673009", "673020"],
+      "localities": [
+        "Calicut Beach", "Palayam", "Nadakkavu", "Mankave",
+        "Feroke", "Ramanattukara", "Chevayur", "Arayidathupalam",
+        "Mavoor Road", "Medical College", "YMCA Cross Road"
+      ]
+    },
+    {
+      "city": "Thrissur",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 10.5276,
+      "lng": 76.2144,
+      "pinCodes": ["680001", "680002", "680004", "680005", "680020"],
+      "localities": [
+        "Round South", "Round North", "Ollur", "Poonkunnam",
+        "Kuriachira", "Ayyanthole", "Punkunnam", "Guruvayur",
+        "Chalakudy", "Kodakara", "Velur"
+      ]
+    },
+    {
+      "city": "Kannur",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 11.8745,
+      "lng": 75.3704,
+      "pinCodes": ["670001", "670002", "670004", "670006", "670012"],
+      "localities": [
+        "Thavakkara", "Mappila Bay", "Iritty", "Thalassery",
+        "Payyanur", "Sreekandapuram", "Mattannur"
+      ]
+    },
+    {
+      "city": "Kollam",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 8.8932,
+      "lng": 76.6141,
+      "pinCodes": ["691001", "691002", "691004", "691010", "691013"],
+      "localities": [
+        "Asramam", "Chinnakada", "Perelmannu", "Kottiyam",
+        "Kundara", "Karunagappally", "Chathanoor"
+      ]
+    },
+    {
+      "city": "Palakkad",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 10.7867,
+      "lng": 76.6548,
+      "pinCodes": ["678001", "678002", "678006", "678007", "678013"],
+      "localities": [
+        "Olavakode", "Kalmandapam", "Sulthan Bathery", "Mannarkkad",
+        "Ottapalam", "Shoranur", "Alathur", "Chittur"
+      ]
+    },
+    {
+      "city": "Alappuzha",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 9.4981,
+      "lng": 76.3388,
+      "pinCodes": ["688001", "688002", "688003", "688006", "688007"],
+      "localities": [
+        "Mullakkal", "Thathampally", "Cherthala", "Haripad",
+        "Kayamkulam", "Mararikulam", "Ambalapuzha"
+      ]
+    },
+    {
+      "city": "Kottayam",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 9.5916,
+      "lng": 76.5222,
+      "pinCodes": ["686001", "686002", "686004", "686005", "686013"],
+      "localities": [
+        "Baker Junction", "Nagampadam", "Thalayolaparambu",
+        "Changanacherry", "Pala", "Ettumanoor", "Vaikom"
+      ]
+    },
+    {
+      "city": "Malappuram",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 11.0730,
+      "lng": 76.0740,
+      "pinCodes": ["676505", "676507", "676509", "679321", "679338"],
+      "localities": [
+        "Manjeri", "Perinthalmanna", "Tirur", "Ponnani",
+        "Nilambur", "Kondotty", "Pandikkad"
+      ]
+    },
+    {
+      "city": "Kasaragod",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 12.4996,
+      "lng": 74.9869,
+      "pinCodes": ["671121", "671122", "671123", "671124", "671315"],
+      "localities": [
+        "Kasaragod Town", "Kanhangad", "Hosdurg", "Bekal",
+        "Uppala", "Nileshwar", "Cheruvathur"
+      ]
+    },
+    {
+      "city": "Pathanamthitta",
+      "state": "Kerala",
+      "country": "India",
+      "lat": 9.2648,
+      "lng": 76.7870,
+      "pinCodes": ["689645", "689647", "689649", "689651", "689653"],
+      "localities": [
+        "Pathanamthitta Town", "Adoor", "Thiruvalla", "Ranni",
+        "Pandalam", "Konni", "Kozhencherry"
+      ]
+    }
+  ],
+
+  "providerProfiles": [
+    {
+      "type": "quick-earner",
+      "label": "Quick Earner",
+      "description": "Someone who needs income today — can run errands, assist in moves, do basic cleaning, carry items, assist tradespeople. No certification required.",
+      "keywords": [
+        "earn money today Kerala", "daily wage work Kochi",
+        "quick cash jobs near me Kerala", "errand runner jobs Kerala",
+        "part time work Thiruvananthapuram", "daily income work app India",
+        "earn from home Kerala", "gig work without experience Kerala"
+      ],
+      "malayalamKeywords": [
+        "ഇന്ന് വരുമാനം നേടുക കേരളം", "കൊച്ചിയിൽ ദൈനംദിന ജോലി",
+        "കൈ സഹായം ജോലി", "ചെറിയ ജോലി വേണം"
+      ]
+    },
+    {
+      "type": "skilled-trade",
+      "label": "Skilled Tradesperson",
+      "description": "Plumber, electrician, carpenter, painter, AC technician — skilled but looking for steady gig work rather than a full-time job.",
+      "keywords": [
+        "plumbing jobs Kochi", "electrician gig work Kerala",
+        "carpenter freelance jobs Kerala", "skilled worker app India",
+        "home service professional registration", "join Sahayi as a professional",
+        "AC technician jobs Kerala", "painter jobs near me Kerala",
+        "find plumbing gigs Kerala", "earn as electrician Kochi"
+      ],
+      "malayalamKeywords": [
+        "പ്ലംബിംഗ് ജോലി കൊച്ചി", "ഇലക്ട്രീഷ്യൻ ജോലി കേരളം",
+        "തൊഴിൽ ആപ്പ് കേരളം", "ഗിഗ് ജോലി കേരളം"
+      ]
+    },
+    {
+      "type": "certified-pro",
+      "label": "Certified Professional",
+      "description": "Licensed professional — ITI certified, experienced, seeking premium clients and consistent bookings through a verified platform.",
+      "keywords": [
+        "licensed electrician jobs Kerala", "ITI certificate work India",
+        "verified professional jobs Kerala", "premium gig platform India",
+        "professional home service jobs", "high paying service jobs Kerala",
+        "certified plumber work Kerala", "professional cleaning jobs Kerala"
+      ],
+      "malayalamKeywords": [
+        "ലൈസൻസ്ഡ് ഇലക്ട്രീഷ്യൻ ജോലി", "ITI സർട്ടിഫിക്കറ്റ് ജോലി",
+        "സർട്ടിഫൈഡ് പ്ലംബർ ജോലി", "പ്രൊഫഷണൽ ക്ലീനിംഗ് ജോലി"
+      ]
+    }
+  ],
+
   "keywordGroups": [
     {
       "group": "Home Services",
       "keywords": [
         "home services app India", "on demand home services",
-        "home service booking app", "trusted home services",
-        "professional home services India"
+        "home service booking app", "trusted home services Kerala",
+        "professional home services India", "best home service app Kerala",
+        "doorstep service booking Kerala"
       ],
       "targetPage": "/",
       "schemaType": "Service"
@@ -35,7 +241,8 @@
       "keywords": [
         "plumber near me Kerala", "plumbing services Kochi",
         "emergency plumber Thiruvananthapuram", "pipe repair service Kerala",
-        "bathroom fitting service Kochi"
+        "bathroom fitting service Kochi", "water leak repair Kerala",
+        "plumber in Thrissur", "plumbing contractor Kerala"
       ],
       "targetPage": "/services/plumbing",
       "schemaType": "Service"
@@ -45,7 +252,8 @@
       "keywords": [
         "electrician near me Kerala", "electrical repair Kochi",
         "home wiring service Kerala", "electrician Thiruvananthapuram",
-        "electrical installation service India"
+        "electrical installation service India", "fan installation Kerala",
+        "switchboard repair Kochi", "circuit breaker fix Kerala"
       ],
       "targetPage": "/services/electrical",
       "schemaType": "Service"
@@ -55,16 +263,61 @@
       "keywords": [
         "home cleaning service Kerala", "deep cleaning Kochi",
         "sofa cleaning service Thiruvananthapuram", "office cleaning Kerala",
-        "house cleaning service near me Kerala"
+        "house cleaning service near me Kerala", "bathroom cleaning service Kochi",
+        "kitchen deep clean Kerala", "post construction cleaning Kerala"
       ],
       "targetPage": "/services/cleaning",
+      "schemaType": "Service"
+    },
+    {
+      "group": "AC and Appliance",
+      "keywords": [
+        "AC service Kochi", "AC repair Kerala", "AC gas refill near me",
+        "washing machine repair Kerala", "refrigerator repair Kochi",
+        "TV repair service Kerala", "appliance repair near me Kerala"
+      ],
+      "targetPage": "/services/appliance-repair",
+      "schemaType": "Service"
+    },
+    {
+      "group": "Carpentry and Painting",
+      "keywords": [
+        "carpenter near me Kerala", "furniture repair Kochi",
+        "house painting service Kerala", "door repair service Kerala",
+        "false ceiling work Kerala", "wood polish service Kochi",
+        "interior painting Kerala", "waterproofing service Kerala"
+      ],
+      "targetPage": "/services/carpentry",
+      "schemaType": "Service"
+    },
+    {
+      "group": "Quick Tasks and Errands",
+      "keywords": [
+        "errand service Kerala", "personal assistant service Kochi",
+        "grocery delivery help Kerala", "moving help Thiruvananthapuram",
+        "handyman service near me Kerala", "odd jobs service Kerala",
+        "help with shifting Kerala", "last mile help service India"
+      ],
+      "targetPage": "/services/quick-tasks",
+      "schemaType": "Service"
+    },
+    {
+      "group": "Provider Join",
+      "keywords": [
+        "join Sahayi as professional", "earn with Sahayi",
+        "register as service provider Kerala", "home service jobs Kerala",
+        "gig work app Kerala", "find work as plumber Kerala",
+        "electrician gig app India", "earn daily Kerala app"
+      ],
+      "targetPage": "/join",
       "schemaType": "Service"
     },
     {
       "group": "Brand",
       "keywords": [
         "Sahayi app", "Sahayi services", "Sahayi home services",
-        "Sahayi Kerala", "sahayi.co.in"
+        "Sahayi Kerala", "sahayi.co.in", "Sahayi app download",
+        "Sahayi service provider", "what is Sahayi"
       ],
       "targetPage": "/",
       "schemaType": "Service"
@@ -74,12 +327,26 @@
       "keywords": [
         "best plumber in Kochi", "who fixes AC in Kerala",
         "how to book home services in Kerala",
-        "reliable electrician near me", "affordable cleaning service Kochi"
+        "reliable electrician near me", "affordable cleaning service Kochi",
+        "how to find gig work in Kerala", "how to earn money as a plumber Kerala",
+        "ഏറ്റവും നല്ല പ്ലംബർ കൊച്ചിയിൽ", "കേരളത്തിൽ ഗൃഹ സേവനം എങ്ങനെ ബുക്ക് ചെയ്യാം"
       ],
       "targetPage": "/services",
       "schemaType": "FAQPage"
+    },
+    {
+      "group": "Malayalam SEO",
+      "keywords": [
+        "കൊച്ചിയിൽ പ്ലംബർ", "കേരളത്തിൽ ഇലക്ട്രീഷ്യൻ",
+        "വീട് വൃത്തിയാക്കൽ സേവനം കേരളം", "ഹോം സർവീസ് ആപ്പ് കേരളം",
+        "സഹായി ആപ്പ്", "ഗൃഹ സേവനം കേരളം",
+        "വീട്ടുജോലി ബുക്ക് ചെയ്യുക", "തൊഴിൽ കണ്ടെത്തൽ ആപ്പ് കേരളം"
+      ],
+      "targetPage": "/ml",
+      "schemaType": "FAQPage"
     }
   ],
+
   "pages": [
     { "path": "/", "label": "Home" },
     { "path": "/services", "label": "Services" },
@@ -88,6 +355,14 @@
     { "path": "/services/cleaning", "label": "Cleaning" },
     { "path": "/services/carpentry", "label": "Carpentry" },
     { "path": "/services/painting", "label": "Painting" },
+    { "path": "/services/appliance-repair", "label": "Appliance Repair" },
+    { "path": "/services/ac-servicing", "label": "AC Servicing" },
+    { "path": "/services/quick-tasks", "label": "Quick Tasks" },
+    { "path": "/join", "label": "Join as Professional" },
+    { "path": "/join/quick-earner", "label": "Quick Earner" },
+    { "path": "/join/skilled-trade", "label": "Skilled Tradesperson" },
+    { "path": "/join/certified-pro", "label": "Certified Professional" },
+    { "path": "/ml", "label": "Malayalam" },
     { "path": "/pricing", "label": "Pricing" },
     { "path": "/about", "label": "About" },
     { "path": "/blog", "label": "Blog" }

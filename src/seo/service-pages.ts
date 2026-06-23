@@ -70,6 +70,42 @@ const SERVICE_META: Record<string, {
       { q: `Is deep cleaning available in ${city}?`, a: `Yes. Sahayi offers deep cleaning, kitchen cleaning, bathroom sanitisation, and post-move/post-renovation cleaning services in ${city}.` },
     ],
   },
+  "AC and Appliance": {
+    displayName: "AC & Appliance Repair",
+    providers: "AC technicians and appliance repair specialists",
+    urgencyPhrase: "same-day AC repair",
+    priceRange: "₹500–₹3000",
+    faqs: (city) => [
+      { q: `Who repairs AC in ${city}?`, a: `Sahayi connects you with certified AC technicians in ${city} for gas refills, compressor repairs, PCB issues, filter cleaning, and annual maintenance contracts. Same-day slots available for emergencies.` },
+      { q: `How much does AC servicing cost in ${city}?`, a: `AC servicing in ${city} through Sahayi starts at ₹500 for a basic clean and check. Gas refill costs ₹1200–₹2500 depending on gas type. All prices are shown before you confirm the booking.` },
+      { q: `Can I book washing machine repair in ${city} through Sahayi?`, a: `Yes. Sahayi in ${city} covers washing machine, refrigerator, microwave, and television repair alongside AC servicing. Choose your appliance type when booking.` },
+      { q: `Do Sahayi technicians carry spare parts in ${city}?`, a: `Technicians in ${city} carry commonly needed parts. For specific components, they'll inform you upfront about the part cost and sourcing time before starting any repair work.` },
+    ],
+  },
+  "Carpentry and Painting": {
+    displayName: "Carpentry & Painting",
+    providers: "carpenters and painters",
+    urgencyPhrase: "professional carpentry and painting",
+    priceRange: "₹600–₹5000",
+    faqs: (city) => [
+      { q: `Where can I find a carpenter in ${city}?`, a: `Sahayi connects you with experienced carpenters in ${city} for furniture repair, door and window fixing, false ceiling work, custom woodwork, and interior fit-outs. View ratings and price estimates before booking.` },
+      { q: `How much does house painting cost in ${city}?`, a: `Interior painting in ${city} through Sahayi is priced per square foot, typically ₹12–₹25/sq ft for basic emulsion. Full home painting quotes are given after an on-site assessment at no cost.` },
+      { q: `Can I book a carpenter for a same-day repair in ${city}?`, a: `Yes, same-day carpentry bookings are available in ${city} for urgent repairs like broken doors, stuck drawers, or damaged furniture. Availability depends on current demand in your locality.` },
+      { q: `Do Sahayi painters use quality materials in ${city}?`, a: `Sahayi painters in ${city} use materials specified by the customer or recommend branded options (Asian Paints, Berger, etc.) with invoices provided. You control the material choice and budget.` },
+    ],
+  },
+  "Quick Tasks": {
+    displayName: "Quick Tasks & Errands",
+    providers: "task runners and handymen",
+    urgencyPhrase: "fast errand and handyman help",
+    priceRange: "₹200–₹800",
+    faqs: (city) => [
+      { q: `Can I book someone to run errands for me in ${city}?`, a: `Yes. Sahayi's Quick Tasks category in ${city} covers grocery pickup, document delivery, pharmacy runs, bill payments, and general errands. Typically available within 1–2 hours of booking.` },
+      { q: `Is there a handyman service available in ${city}?`, a: `Sahayi has handymen in ${city} for small jobs — hanging pictures, assembling furniture, fixing minor leaks, replacing door handles, and general household fixes that don't need a specialist.` },
+      { q: `How much does errand help cost in ${city}?`, a: `Quick task pricing in ${city} starts at ₹200 for simple errands and goes up to ₹800 for half-day assistance. Exact pricing is shown in the app before you confirm.` },
+      { q: `Can I book moving help in ${city} through Sahayi?`, a: `Yes. Sahayi has helpers available in ${city} for home shifting — packing assistance, loading and unloading, furniture moving within the building, and unpacking support. Book as much help as you need.` },
+    ],
+  },
   "Home Services": {
     displayName: "Home Services",
     providers: "skilled home service professionals",
@@ -87,22 +123,43 @@ const SERVICE_META: Record<string, {
 function buildSchema(service: string, city: string, brand: BrandConfig, faqs: { q: string; a: string }[]): object[] {
   const meta = SERVICE_META[service] ?? SERVICE_META["Home Services"];
 
-  const localBusiness = {
+  // Pull geo coordinates from brand locations if available
+  const locations: any[] = (brand as any).locations ?? [];
+  const loc = locations.find((l: any) => l.city === city);
+  const geo = loc ? { "@type": "GeoCoordinates", "latitude": loc.lat, "longitude": loc.lng } : undefined;
+  const pinCodes: string[] = loc?.pinCodes ?? [];
+  const localities: string[] = loc?.localities ?? [];
+
+  const localBusiness: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": ["LocalBusiness", "HomeAndConstructionBusiness"],
     "name": `Sahayi — ${meta.displayName} in ${city}`,
     "description": `Book trusted, verified ${meta.providers} in ${city} through Sahayi. ${meta.urgencyPhrase}. Transparent pricing, rated professionals.`,
     "url": `${brand.siteUrl}/${service.toLowerCase().replace(/\s+/g, "-")}/${city.toLowerCase()}`,
     "telephone": "+91-XXXX-XXXXXX",
-    "areaServed": {
-      "@type": "City",
-      "name": city,
-      "containedInPlace": {
-        "@type": "State",
-        "name": "Kerala",
-        "containedInPlace": { "@type": "Country", "name": "India" }
-      }
-    },
+    ...(geo ? { "geo": geo } : {}),
+    "areaServed": [
+      {
+        "@type": "City",
+        "name": city,
+        "containedInPlace": {
+          "@type": "State",
+          "name": "Kerala",
+          "containedInPlace": { "@type": "Country", "name": "India" }
+        }
+      },
+      ...localities.map((l: string) => ({
+        "@type": "Place",
+        "name": `${l}, ${city}`,
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": l,
+          "addressRegion": city,
+          "addressCountry": "IN",
+          ...(pinCodes[0] ? { "postalCode": pinCodes[0] } : {})
+        }
+      }))
+    ],
     "priceRange": meta.priceRange,
     "currenciesAccepted": "INR",
     "paymentAccepted": "Cash, UPI, Credit Card, Debit Card",

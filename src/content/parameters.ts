@@ -89,10 +89,13 @@ export const CONTENT_PARAMETERS = {
     "professional warm — polished but approachable, like a knowledgeable friend who happens to be an expert",
     // Middle ground
     "everyday conversational — contractions fine, short sentences, feels like spoken word on paper",
-    "Hinglish natural — English prose with occasional Hindi/Malayalam words that fit naturally (accha, yaar, swalpa, nalla), never forced",
+    "Manglish natural — English prose woven with Malayalam words that fit organically (nalla, swalpa, alle, ente, sheriyanu, ithu kollam), never transliterated awkwardly; reads like how educated Keralites actually talk",
+    "Hinglish natural — English prose with occasional Hindi words that fit naturally (accha, yaar, sahi hai, bilkul), never forced",
     // Informal / generational
     "millennial self-aware — slightly ironic, parenthetical asides, comfortable with cultural references",
     "Gen Z register — lowercase acceptable, short punchy sentences, 'ngl', 'fr', 'no cap', ellipsis for effect... uses line breaks as punctuation",
+    // Full Malayalam
+    "pure Malayalam — write entirely in Malayalam script; clear, modern, colloquial; not archaic Granthavari; the way a thoughtful young Keralite would write a WhatsApp message that actually sounds educated",
   ],
 
   // ── Experience and emotional texture ───────────────────────────────────────

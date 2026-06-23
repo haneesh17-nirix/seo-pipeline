@@ -14,6 +14,7 @@ import { saveReport, printConsoleReport } from "./reports/reporter";
 import { saveSitemap } from "./seo/sitemap";
 import { saveSchemas } from "./seo/schema";
 import { saveServicePages, generateServicePage } from "./seo/service-pages";
+import { saveProviderPages, generateProviderPage } from "./seo/provider-pages";
 import type { ContentType } from "./keywords/config";
 import {
   generateBatch,
@@ -330,6 +331,32 @@ program
       console.log(`  Services: ${[...new Set(saved.map(f => path.basename(f).split(/(?<=[a-z])-(?=[A-Z])/)[0]))].join(", ")}`);
       console.log(`  Output: brands/${brand.slug}/output/service-pages/`);
       console.log(`  Each page has: .html  .schema.json  .meta.json\n`);
+    }
+  });
+
+// ── provider-pages ────────────────────────────────────────────────────────────
+program
+  .command("provider-pages")
+  .description("Generate provider-side landing pages (quick-earner, skilled-trade, certified-pro) + Malayalam page")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .option("--archetype <type>", "quick-earner | skilled-trade | certified-pro (default: all)")
+  .option("--city <name>", "Generate for one city only")
+  .action((opts) => {
+    const brand = resolveBrand(opts.brand);
+    if (opts.archetype && opts.city) {
+      const page = generateProviderPage(opts.archetype, opts.city, brand);
+      const dir = path.join(process.cwd(), "brands", brand.slug, "output", "provider-pages");
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, `${page.slug}.html`), page.html, "utf8");
+      fs.writeFileSync(path.join(dir, `${page.slug}.schema.json`), JSON.stringify(page.schema, null, 2), "utf8");
+      console.log(`\n✓ ${page.slug} — ${page.title}\n`);
+    } else {
+      console.log(`\n  Generating provider pages for ${brand.name}...`);
+      const saved = saveProviderPages(brand);
+      console.log(`\n✓ ${saved.length} provider pages generated`);
+      console.log(`  Output: brands/${brand.slug}/output/provider-pages/`);
+      console.log(`  Archetypes: quick-earner, skilled-trade, certified-pro`);
+      console.log(`  Languages: English + Malayalam\n`);
     }
   });
 
