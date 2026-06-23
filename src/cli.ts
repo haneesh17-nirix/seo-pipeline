@@ -30,7 +30,7 @@ import { startApprovalBot, getAllPending, updateReviewStatus } from "./approval/
 import { enqueueApproved, publishDueJobs, startScheduler, loadQueue } from "./publishing/scheduler";
 import { fetchUnrepliedComments, saveReplyDrafts } from "./publishing/meta";
 import { saveMetaAdDraft } from "./ads/google-ads";
-import { generateVideoForContent, VideoFormat, VideoProvider } from "./video/generator";
+import { generateVideoForContent, generateVideoSuite, VideoFormat, VideoProvider, ContentItem } from "./video/generator";
 
 const CONTENT_TYPES: ContentType[] = ["blog-post", "landing-page", "meta-tags", "faq"];
 
@@ -755,52 +755,72 @@ program
 // ── generate-video: generate video scripts and AI video ───────────────────────
 program
   .command("generate-video")
-  .description("Generate video script and AI video for a content item")
+  .description("Generate video script(s) for a keyword or approved content items")
   .requiredOption("-b, --brand <slug>", "Brand slug")
-  .option("-f, --format <format>", "Video format: reel | short | ad-15s | ad-30s | explainer-60s", "short")
-  .option("-p, --provider <provider>", "Video provider: runway | kling | pika | local-sd", "local-sd")
+  .option("-f, --format <format>", "reel | short | ad-15s | ad-30s | explainer-60s (default: short)", "short")
+  .option("-p, --provider <provider>", "runway | kling | pika | local-sd (default: local-sd)", "local-sd")
   .option("-k, --keyword <keyword>", "Generate video for a specific keyword")
-  .option("--all-approved", "Generate videos for all approved content")
+  .option("-l, --language <lang>", "Output language: English | Malayalam | Manglish | Hindi (default: English)", "English")
+  .option("--suite", "Generate all formats × all languages (English, Malayalam, Manglish)")
+  .option("--all-approved", "Generate videos for all approved content in review queue")
   .action(async (opts) => {
     const brand = resolveBrand(opts.brand);
     const format = opts.format as VideoFormat;
     const provider = opts.provider as VideoProvider;
-
     const reviewDir = path.join(process.cwd(), "brands", brand.slug, "output", "review-queue");
 
     if (opts.allApproved) {
+      const { parseReviewFile } = await import("./approval/discord-bot");
       const files = fs.existsSync(reviewDir)
         ? fs.readdirSync(reviewDir).filter((f) => f.endsWith(".md"))
         : [];
       const approved = files
-        .map((f) => { const { parseReviewFile } = require("./approval/discord-bot"); return parseReviewFile(path.join(reviewDir, f)); })
+        .map((f) => parseReviewFile(path.join(reviewDir, f)))
         .filter((item: any) => item?.status === "approved");
 
       if (!approved.length) { console.log("  No approved content found."); return; }
       console.log(`\n  Generating ${format} videos for ${approved.length} approved item(s)...\n`);
-      for (const item of approved) {
-        await generateVideoForContent(item, format, provider);
+      for (const raw of approved) {
+        const item: ContentItem = {
+          brand: raw.brand,
+          keyword: raw.keyword,
+          content: raw.content ?? "",
+          params: raw.params,
+        };
+        if (opts.suite) {
+          await generateVideoSuite(item, ["reel", "short", "ad-15s"], ["English", "Malayalam", "Manglish"], provider);
+        } else {
+          await generateVideoForContent(item, format, provider);
+        }
       }
       return;
     }
 
     if (opts.keyword) {
-      // Create a minimal review item for the keyword
-      const fakeItem = {
-        filePath: "",
+      const item: ContentItem = {
         brand: brand.slug,
-        contentType: "social-post" as const,
         keyword: opts.keyword,
-        status: "approved" as const,
-        params: {},
-        content: `# ${opts.keyword}\n\n${opts.keyword} service available in Kerala. Book now at sahayi.co.in`,
-        generatedAt: new Date().toISOString(),
+        content: `${opts.keyword} service available in Kerala. Book now at ${brand.siteUrl}`,
+        params: { outputLanguage: opts.language },
       };
-      await generateVideoForContent(fakeItem as any, format, provider);
+      console.log(`\n  Generating video [${opts.language}] for: "${opts.keyword}"\n`);
+      if (opts.suite) {
+        const results = await generateVideoSuite(item, ["reel", "short", "ad-15s"], ["English", "Malayalam", "Manglish"], provider);
+        console.log(`\n  ✓ ${results.length} scripts generated\n`);
+      } else {
+        const result = await generateVideoForContent(item, format, provider);
+        console.log(`\n  ✓ ${result}\n`);
+      }
       return;
     }
 
-    console.error("  Specify --keyword or --all-approved");
+    console.log(`
+  Usage:
+    seo generate-video -b sahayi -k "plumber in Kochi" --language Malayalam
+    seo generate-video -b sahayi -k "home cleaning Trivandrum" --suite
+    seo generate-video -b sahayi --all-approved --format reel
+    seo generate-video -b sahayi --all-approved --suite
+    `);
   });
 
 program.parse(process.argv);

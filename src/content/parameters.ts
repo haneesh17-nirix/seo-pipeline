@@ -62,22 +62,29 @@ export const CONTENT_PARAMETERS = {
   // ── Literary influence ──────────────────────────────────────────────────────
   // Draw on a specific author's narrative sensibility — not to copy or quote,
   // but to absorb their texture: sentence rhythm, emotional register, world-view.
+  // This applies regardless of output language — if writing in Malayalam, absorb
+  // the sensibility and EXPRESS IT in natural Malayalam, not in translation.
   literaryInfluence: [
+    // Kerala / Malayalam literature — for writing in any language about Kerala
+    "Vaikom Muhammad Basheer — radical intimacy, ordinary people with extraordinary inner lives, humour that aches",
+    "MT Vasudevan Nair — sparse and devastating, memory as structure, what is left unsaid destroys you",
+    "OV Vijayan — surreal and politically raw, language used as a blade, absurdism as the only honest response to history",
+    "Kamala Das — confessional, unapologetically interior, the body and the home as political territories",
+    "Thakazhi Sivasankara Pillai — labour, backwaters, the dignity of working Kerala, community memory in mud and water",
+    "Paul Zacharia — sharp satirical wit, absurdist social commentary, language that makes the familiar strange",
+    "Sarah Joseph — feminist, rhythmic, the village and the woman as mirrors of each other",
     // Indian literature — warmth, small-town life, the ordinary made rich
     "R.K. Narayan — gentle, unhurried, finds comedy and dignity in everyday Indian life",
     "Ruskin Bond — nostalgic, sensory, writes as if memory itself has a smell",
-    "Arundhati Roy — lyrical and dense, notices what others walk past, politically alive",
     "Premchand — social realism, working-class dignity, plain truth told plainly",
     "Manto — raw, uncomfortable honesty, no sentiment wasted, cuts straight to the nerve",
     // Global literature — diverse rhythms
     "Hemingway — sparse, declarative, the iceberg theory: what's unsaid carries the weight",
     "Chekhov — quietly devastating, character over plot, nothing resolved, everything felt",
     "Maya Angelou — empowering, rhythmic, the personal is universal, joy hard-earned",
-    "Roald Dahl — mischievous wit, dark undercurrent, reader is always slightly off-balance",
-    "Terry Pratchett — footnote humour, absurdist logic that somehow explains everything",
-    "Toni Morrison — rich, layered, language that holds community memory inside it",
     "Gabriel García Márquez — magical realism, the mundane and the miraculous at the same temperature",
-    "Haruki Murakami — detached cool, surreal domesticity, loneliness as texture not tragedy",
+    "Toni Morrison — rich, layered, language that holds community memory inside it",
+    "Terry Pratchett — footnote humour, absurdist logic that somehow explains everything",
     "David Sedaris — self-deprecating, confessional, funny in a way that makes you wince",
   ],
 
@@ -117,6 +124,19 @@ export const CONTENT_PARAMETERS = {
     "emoji as light punctuation — 1–3 emojis per section used functionally not decoratively, like a modern street sign",
     "ellipsis pacing — uses... to create pause, let ideas land, trail off deliberately... then return",
     "asterisk and *emphasis* — *italics-style* emphasis via asterisks, occasional ALL CAPS for a beat, visual texture in the prose",
+  ],
+
+  // ── Output language ─────────────────────────────────────────────────────────
+  // The language the content is WRITTEN IN. All other parameters — literary
+  // influence, tone, register, architecture, reference frame — apply fully
+  // regardless of language. When writing in Malayalam or Hindi, the instruction
+  // is to express those sensibilities in that language natively, never translate.
+  outputLanguage: [
+    "English — standard Indian English, not British or American; Kerala inflection welcome",
+    "Malayalam — write entirely in Malayalam script, modern colloquial, not archaic; express all tone/register/influence instructions natively in Malayalam",
+    "Manglish — Malayalam-English code-switch as used by urban Keralites; natural ratio, never forced",
+    "Hindi — conversational Indian Hindi; not textbook Hindi; Mumbai/Delhi register fine",
+    "English with Malayalam phrases — English primary, Malayalam phrases for emotional beats and local colour",
   ],
 
   // ── Cultural reference frame ─────────────────────────────────────────────────

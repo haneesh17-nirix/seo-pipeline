@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 import * as fs from "fs";
 import * as path from "path";
-import { ReviewItem } from "../approval/telegram-bot";
+import { PublishItem as ReviewItem } from "./types";
 
 // YouTube Data API v3 — publish Shorts and long-form videos
 

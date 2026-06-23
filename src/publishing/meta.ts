@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as fs from "fs";
-import { ReviewItem } from "../approval/telegram-bot";
+import { PublishItem as ReviewItem } from "./types";
 
 // Meta Graph API — Instagram + Facebook publishing
 // Credentials set per-brand in brand.json or env vars

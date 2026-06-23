@@ -10,7 +10,7 @@ param location string = 'eastus'
 @description('Name for the Azure OpenAI resource')
 param openAiName string = 'sahayi-seo-openai'
 
-@description('Name for the gpt-4o-mini deployment')
+@description('Name for the gpt-4.1-mini deployment')
 param deploymentName string = 'gpt-4o-mini'
 
 @description('Tokens per minute capacity (1 = 1000 TPM)')
@@ -39,8 +39,8 @@ resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-10-01
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'gpt-4o-mini'
-      version: '2024-07-18'
+      name: 'gpt-4.1-mini'
+      version: '2025-04-14'
     }
     raiPolicyName: 'Microsoft.Default'
   }

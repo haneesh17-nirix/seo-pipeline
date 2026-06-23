@@ -100,10 +100,23 @@ EXPERIENCE TONE: ${params.experienceTone}
   → This is the emotional after-taste of reading the piece.
     A reader should finish and feel this, not be told it.
 
+OUTPUT LANGUAGE: ${params.outputLanguage}
+  → This is the language you write in. Every other instruction below —
+    literary influence, tone, register, experience, annotation, reference
+    frame, post architecture — applies FULLY in this language.
+    Do not translate. Express those sensibilities natively in this language.
+    If the language is Malayalam: write in Malayalam script throughout.
+    If Manglish: mix naturally as an educated urban Keralite would.
+    The SEO keyword may appear in English even in a Malayalam piece —
+    that is normal and expected for search visibility.
+
 ANNOTATION STYLE: ${params.annotationStyle}
   → Let this shape how punctuation and formatting are used.
     The page should have a typographic personality consistent
     with this style throughout — not just in one section.
+    If writing in Malayalam script, adapt this style to Malayalam
+    punctuation conventions — do not force English em-dashes into
+    Malayalam prose where they feel unnatural.
 
 CULTURAL REFERENCE FRAME: ${params.referenceFrame}
   → This is the external world the content borrows texture from.
@@ -228,6 +241,7 @@ params:
   localDepth: "${result.params.localDepth}"
   length: "${result.params.length}"
   evidence: "${result.params.evidence}"
+  outputLanguage: "${result.params.outputLanguage?.split(" — ")[0] ?? "English"}"
   referenceFrame: "${result.params.referenceFrame?.split(" — ")[0] ?? ""}"
   postArchitecture: "${result.params.postArchitecture?.split(" — ")[0] ?? ""}"
 ---

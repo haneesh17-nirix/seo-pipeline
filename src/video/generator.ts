@@ -1,7 +1,22 @@
-import axios from "axios";
 import * as fs from "fs";
 import * as path from "path";
-import { ReviewItem } from "../approval/telegram-bot";
+import axios from "axios";
+import { callLLM } from "../llm/provider";
+
+// ── Shared content item shape (from review queue frontmatter) ─────────────────
+
+export interface ContentItem {
+  brand: string;
+  keyword: string;
+  content: string;
+  params?: {
+    tone?: string;
+    outputLanguage?: string;
+    referenceFrame?: string;
+    postArchitecture?: string;
+    literaryInfluence?: string;
+  };
+}
 
 // ── Video script types ────────────────────────────────────────────────────────
 
@@ -25,29 +40,38 @@ export interface VideoScript {
   cta: string;
   hashtags: string[];
   aspectRatio: "9:16" | "16:9" | "1:1";
+  language: string;        // which language the voiceover/captions are written in
 }
 
 // ── Script generator ──────────────────────────────────────────────────────────
-// Uses the same Ollama LLM to generate structured video scripts
-// based on the approved written content
-
-const OLLAMA_HOST = process.env.OLLAMA_HOST ?? "http://localhost:11434";
 
 export async function generateVideoScript(
-  item: ReviewItem,
+  item: ContentItem,
   format: VideoFormat
 ): Promise<VideoScript> {
   const durations: Record<VideoFormat, number> = {
     "reel": 30, "short": 59, "ad-15s": 15, "ad-30s": 30, "explainer-60s": 60,
   };
   const totalDuration = durations[format];
+  const isVertical = format === "reel" || format === "short";
+  const outputLanguage = item.params?.outputLanguage ?? "English";
+  const tone = item.params?.tone ?? "conversational and warm";
+
+  const languageInstruction = buildLanguageInstruction(outputLanguage);
 
   const prompt = `
 You are a video scriptwriter creating a ${format} (${totalDuration} seconds) for "${item.brand}".
-Based on this written content about "${item.keyword}", write a video script.
+Based on this written content about "${item.keyword}", write a punchy video script.
 
 WRITTEN CONTENT TO ADAPT:
 ${item.content.slice(0, 1500)}
+
+${languageInstruction}
+
+TONE: ${tone}
+${item.params?.referenceFrame ? `REFERENCE FRAME: ${item.params.referenceFrame}` : ""}
+${item.params?.postArchitecture ? `POST ARCHITECTURE: ${item.params.postArchitecture}` : ""}
+${item.params?.literaryInfluence ? `LITERARY SENSIBILITY: ${item.params.literaryInfluence} — let this texture the voiceover language` : ""}
 
 OUTPUT FORMAT — respond with a valid JSON object with this exact structure:
 {
@@ -71,63 +95,95 @@ RULES:
 - Total scenes duration must add up to exactly ${totalDuration} seconds
 - Hook must be punchy — under 8 words, creates immediate curiosity
 - Each scene visual prompt should describe real, achievable footage or animation
-- Voice must match the written content's tone: ${item.params?.tone ?? "conversational"}
 - Captions must be short enough to read in the scene duration
-- For ${format === "reel" || format === "short" ? "vertical 9:16" : "horizontal 16:9"} format
+- Format is ${isVertical ? "vertical 9:16 (phone screen)" : "horizontal 16:9"}
 - Include at least one scene showing the service being done (authentic, not stock)
 - CTA must include the website URL and a clear action
+- Do not include JSON comments or trailing commas — pure valid JSON only
 `.trim();
 
   try {
-    const res = await fetch(`${OLLAMA_HOST}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "llama3.2",
-        prompt,
-        stream: false,
-        format: "json",
-      }),
-      signal: AbortSignal.timeout(120000),
-    });
-
-    if (!res.ok) throw new Error(`Ollama ${res.status}`);
-    const data = (await res.json()) as { response: string };
-    const parsed = JSON.parse(data.response);
+    const raw = await callLLM(prompt);
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON in LLM response");
+    const parsed = JSON.parse(jsonMatch[0]);
 
     return {
       format,
       totalDuration,
-      aspectRatio: (format === "reel" || format === "short") ? "9:16" : "16:9",
+      aspectRatio: isVertical ? "9:16" : "16:9",
+      language: outputLanguage,
       ...parsed,
     };
-  } catch (err: any) {
-    // Fallback script if LLM unavailable
-    return buildFallbackScript(item, format, totalDuration);
+  } catch {
+    return buildFallbackScript(item, format, totalDuration, outputLanguage);
   }
 }
 
-function buildFallbackScript(item: ReviewItem, format: VideoFormat, duration: number): VideoScript {
+function buildLanguageInstruction(outputLanguage: string): string {
+  if (outputLanguage.startsWith("Malayalam")) {
+    return `SCRIPT LANGUAGE: Malayalam
+  → Write ALL voiceover and captions in Malayalam script (not transliteration).
+    The visual prompts can stay in English for the production team.
+    The hook, voiceover, and captions must be natural, modern Malayalam — not archaic.
+    The brand name "Sahayi" and the website URL may stay in English.
+    Every writing instruction above (tone, literary sensibility, reference frame) applies
+    NATIVELY in Malayalam — do not translate, express those sensibilities in the language.`;
+  }
+  if (outputLanguage.startsWith("Manglish")) {
+    return `SCRIPT LANGUAGE: Manglish (Malayalam-English code-switch)
+  → Write voiceover and captions the way educated urban Keralites actually talk:
+    English sentences with Malayalam words woven in naturally (nalla, alle, swalpa, ente, ithu).
+    Never forced. The ratio should feel natural — roughly 70% English, 30% Malayalam phrases.
+    Visual prompts stay in English.`;
+  }
+  if (outputLanguage.startsWith("Hindi")) {
+    return `SCRIPT LANGUAGE: Hindi
+  → Write voiceover and captions in conversational Hindi.
+    Not textbook Hindi — Mumbai/everyday register.
+    Visual prompts stay in English.`;
+  }
+  if (outputLanguage.startsWith("English with Malayalam")) {
+    return `SCRIPT LANGUAGE: English with Malayalam phrases
+  → English primary. Use Malayalam phrases only at emotional beats and local colour moments
+    (e.g., "ente veedu", "nalla oru service"). Visual prompts in English.`;
+  }
+  return `SCRIPT LANGUAGE: English (Indian English, Kerala inflection welcome)`;
+}
+
+function buildFallbackScript(
+  item: ContentItem,
+  format: VideoFormat,
+  duration: number,
+  language: string
+): VideoScript {
   const service = item.keyword.split(" ")[0];
+  const isMalayalam = language.startsWith("Malayalam");
+
   return {
     format,
     totalDuration: duration,
     aspectRatio: "9:16",
+    language,
     title: `${item.keyword} — ${item.brand}`,
-    hook: `Still waiting for a reliable ${service}?`,
+    hook: isMalayalam ? `ഇനിയും കാത്തിരിക്കേണ്ട.` : `Still waiting for a reliable ${service}?`,
     scenes: [
       {
         durationSeconds: Math.floor(duration * 0.2),
         visualPrompt: `Close-up of a frustrated homeowner looking at a broken ${service} fixture`,
-        voiceover: `Still waiting for a reliable ${service}?`,
-        caption: "Sound familiar?",
+        voiceover: isMalayalam
+          ? `ഒരു നല്ല ${service} കിട്ടാൻ ഇത്ര ബുദ്ധിമുട്ടോ?`
+          : `Still waiting for a reliable ${service}?`,
+        caption: isMalayalam ? "പരിചയമുണ്ടോ?" : "Sound familiar?",
         transition: "cut",
       },
       {
         durationSeconds: Math.floor(duration * 0.4),
         visualPrompt: `Clean split-screen: phone showing ${item.brand} app, then professional arriving at door`,
-        voiceover: `With ${item.brand}, book a verified professional in 60 seconds.`,
-        caption: "Book in 60 seconds",
+        voiceover: isMalayalam
+          ? `${item.brand} വഴി, 60 സെക്കൻഡിൽ ഒരു verified professional-നെ book ചെയ്യാം.`
+          : `With ${item.brand}, book a verified professional in 60 seconds.`,
+        caption: isMalayalam ? "60 സെക്കൻഡ് മതി" : "Book in 60 seconds",
         transition: "slide",
       },
       {
@@ -140,14 +196,16 @@ function buildFallbackScript(item: ReviewItem, format: VideoFormat, duration: nu
       {
         durationSeconds: Math.floor(duration * 0.15),
         visualPrompt: `${item.brand} logo on white background, URL prominent`,
-        voiceover: `Visit ${item.brand}.co.in and book today.`,
+        voiceover: isMalayalam
+          ? `${item.brand}.co.in — ഇന്നു തന്നെ book ചെയ്യൂ.`
+          : `Visit ${item.brand}.co.in and book today.`,
         caption: `${item.brand}.co.in`,
         transition: "fade",
       },
     ],
     music: "upbeat, warm, modern Indian — no lyrics, positive energy",
-    cta: `Book now at ${item.brand}.co.in`,
-    hashtags: [item.brand, service, "Kerala", "homeservices", "Shorts"],
+    cta: isMalayalam ? `${item.brand}.co.in-ൽ ഇന്ന് book ചെയ്യൂ` : `Book now at ${item.brand}.co.in`,
+    hashtags: [item.brand, service, "Kerala", "homeservices", isMalayalam ? "മലയാളം" : "Shorts"],
   };
 }
 
@@ -175,11 +233,10 @@ async function generateWithRunway(script: VideoScript, outputPath: string): Prom
   const results: string[] = [];
 
   for (const scene of script.scenes) {
-    // Runway Gen-3 Alpha: text-to-video
     const res = await axios.post("https://api.runwayml.com/v1/image_to_video", {
       model: "gen3a_turbo",
       promptText: scene.visualPrompt,
-      duration: Math.min(scene.durationSeconds, 10), // Runway max 10s per clip
+      duration: Math.min(scene.durationSeconds, 10),
       ratio: script.aspectRatio,
       watermark: false,
     }, {
@@ -195,7 +252,6 @@ async function generateWithRunway(script: VideoScript, outputPath: string): Prom
     results.push(videoUrl);
   }
 
-  // Save scene URLs for stitching
   const manifestPath = outputPath.replace(".mp4", "-scenes.json");
   fs.writeFileSync(manifestPath, JSON.stringify({
     script,
@@ -224,7 +280,7 @@ async function generateWithKling(script: VideoScript, outputPath: string): Promi
   const apiKey = process.env.KLING_API_KEY;
   if (!apiKey) throw new Error("KLING_API_KEY not set");
 
-  const scene = script.scenes[0]; // Kling: one prompt per generation
+  const scene = script.scenes[0];
   const res = await axios.post("https://api.klingai.com/v1/videos/text2video", {
     model: "kling-v1",
     prompt: scene.visualPrompt,
@@ -234,10 +290,7 @@ async function generateWithKling(script: VideoScript, outputPath: string): Promi
     duration: Math.min(script.totalDuration, 10),
     aspect_ratio: script.aspectRatio,
   }, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
   });
 
   const manifestPath = outputPath.replace(".mp4", "-kling.json");
@@ -265,12 +318,11 @@ async function generateWithPika(script: VideoScript, outputPath: string): Promis
   return manifestPath;
 }
 
-// Fallback: save full production script when no API key is configured
 async function saveScriptForManualProduction(script: VideoScript, outputPath: string): Promise<string> {
   const scriptPath = outputPath.replace(".mp4", "-production-script.md");
   const lines = [
     `# Video Production Script — ${script.title}`,
-    `**Format:** ${script.format} | **Duration:** ${script.totalDuration}s | **Ratio:** ${script.aspectRatio}`,
+    `**Format:** ${script.format} | **Duration:** ${script.totalDuration}s | **Ratio:** ${script.aspectRatio} | **Language:** ${script.language}`,
     `**Music:** ${script.music}`,
     `**Hook (first 3s):** ${script.hook}`,
     ``,
@@ -300,15 +352,15 @@ async function saveScriptForManualProduction(script: VideoScript, outputPath: st
 }
 
 function buildFfmpegCommand(sceneUrls: string[], outputPath: string): string {
-  const inputs = sceneUrls.map((u, i) => `-i "${u}"`).join(" \\\n  ");
+  const inputs = sceneUrls.map((u) => `-i "${u}"`).join(" \\\n  ");
   const filter = sceneUrls.map((_, i) => `[${i}:v][${i}:a]`).join("") + `concat=n=${sceneUrls.length}:v=1:a=1[outv][outa]`;
   return `ffmpeg \\\n  ${inputs} \\\n  -filter_complex "${filter}" \\\n  -map "[outv]" -map "[outa]" \\\n  "${outputPath}"`;
 }
 
-// ── Public convenience function ───────────────────────────────────────────────
+// ── Public convenience functions ──────────────────────────────────────────────
 
 export async function generateVideoForContent(
-  item: ReviewItem,
+  item: ContentItem,
   format: VideoFormat = "short",
   provider: VideoProvider = "local-sd"
 ): Promise<string> {
@@ -316,9 +368,10 @@ export async function generateVideoForContent(
   fs.mkdirSync(outputDir, { recursive: true });
 
   const slug = item.keyword.toLowerCase().replace(/\s+/g, "-").slice(0, 30);
-  const outputPath = path.join(outputDir, `${format}-${slug}-${Date.now()}.mp4`);
+  const langTag = (item.params?.outputLanguage ?? "en").slice(0, 2).toLowerCase();
+  const outputPath = path.join(outputDir, `${format}-${langTag}-${slug}-${Date.now()}.mp4`);
 
-  console.log(`  Generating ${format} script for: "${item.keyword}"...`);
+  console.log(`  Generating ${format} script [${item.params?.outputLanguage ?? "English"}] for: "${item.keyword}"...`);
   const script = await generateVideoScript(item, format);
 
   console.log(`  Hook: "${script.hook}"`);
@@ -327,4 +380,31 @@ export async function generateVideoForContent(
   const result = await generateVideoFromScript(script, provider, outputPath);
   console.log(`  ✓ Video artifact: ${result}`);
   return result;
+}
+
+// Generates scripts in multiple languages and formats from a single content item
+export async function generateVideoSuite(
+  item: ContentItem,
+  formats: VideoFormat[] = ["reel", "short", "ad-15s"],
+  languages: string[] = ["English", "Malayalam", "Manglish"],
+  provider: VideoProvider = "local-sd"
+): Promise<string[]> {
+  const results: string[] = [];
+
+  for (const lang of languages) {
+    const langItem: ContentItem = {
+      ...item,
+      params: { ...item.params, outputLanguage: lang },
+    };
+    for (const format of formats) {
+      try {
+        const r = await generateVideoForContent(langItem, format, provider);
+        results.push(r);
+      } catch (err: any) {
+        console.error(`  ✗ ${format} [${lang}]: ${err.message}`);
+      }
+    }
+  }
+
+  return results;
 }

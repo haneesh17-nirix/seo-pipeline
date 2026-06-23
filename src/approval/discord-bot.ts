@@ -28,10 +28,10 @@ interface ReviewMeta {
   params?: Record<string, string>;
 }
 
-function parseReviewFile(filePath: string): { meta: ReviewMeta; body: string } {
+export function parseReviewFile(filePath: string): { meta: ReviewMeta; body: string; brand: string; keyword: string; contentType: string; status: string; content: string; params: Record<string, string>; filePath: string; generatedAt: string } {
   const raw = fs.readFileSync(filePath, "utf8");
   const fmMatch = raw.match(/^---\n([\s\S]+?)\n---\n([\s\S]*)$/);
-  if (!fmMatch) return { meta: {} as ReviewMeta, body: raw };
+  if (!fmMatch) return { meta: {} as ReviewMeta, body: raw, brand: "", keyword: "", contentType: "", status: "", content: raw, params: {}, filePath, generatedAt: "" };
 
   const meta: Partial<ReviewMeta> = {};
   for (const line of fmMatch[1].split("\n")) {
@@ -43,7 +43,18 @@ function parseReviewFile(filePath: string): { meta: ReviewMeta; body: string } {
   }
 
   const body = fmMatch[2].replace(/<!--[\s\S]*?-->/g, "").trim();
-  return { meta: meta as ReviewMeta, body };
+  const m = meta as ReviewMeta;
+  return {
+    meta: m, body,
+    brand: m.brand ?? "",
+    keyword: m.keyword ?? "",
+    contentType: m.contentType ?? "",
+    status: m.status ?? "",
+    content: body,
+    params: (m.params as Record<string, string>) ?? {},
+    filePath,
+    generatedAt: m.generatedAt ?? "",
+  };
 }
 
 export function updateReviewStatus(
