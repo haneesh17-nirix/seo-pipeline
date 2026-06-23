@@ -569,6 +569,55 @@ program
     console.log();
   });
 
+// ── index-corpus: index generated content into fragment corpus ─────────────────
+program
+  .command("index-corpus")
+  .description("Index all generated content into typed fragment corpus for synthesis")
+  .option("-b, --brand <slug>", "Brand slug (omit for all brands)")
+  .action(async (opts) => {
+    const { indexCorpus } = await import("./content/corpus");
+    const slugs = opts.brand ? [opts.brand] : listBrands();
+    for (const slug of slugs) {
+      process.stdout.write(`  Indexing ${slug} ... `);
+      try {
+        const corpus = indexCorpus(slug);
+        console.log(`✓  ${corpus.fragments.length} fragments from ${corpus.totalSources} sources`);
+      } catch (e: any) {
+        console.log(`✗  ${e.message}`);
+      }
+    }
+  });
+
+// ── synthesis-stats: show corpus and unique selection stats ───────────────────
+program
+  .command("synthesis-stats")
+  .description("Show corpus size, fragment types, and unique selection space")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .action(async (opts) => {
+    const { synthesisStats } = await import("./content/synthesizer");
+    const { loadCorpus } = await import("./content/corpus");
+    const stats = synthesisStats(opts.brand);
+    const corpus = loadCorpus(opts.brand);
+
+    console.log(`\n  ${opts.brand} — Synthesis Stats`);
+    console.log(`  ${"─".repeat(40)}`);
+    console.log(`  Corpus fragments       : ${stats.corpusSize.toLocaleString()}`);
+    console.log(`  Unique selections used : ${stats.uniqueSelectionsUsed.toLocaleString()}`);
+    console.log(`  Possible combinations  : ${stats.possibleCombinations}`);
+
+    if (corpus) {
+      const byType: Record<string, number> = {};
+      for (const f of corpus.fragments) {
+        byType[f.type] = (byType[f.type] ?? 0) + 1;
+      }
+      console.log(`\n  Fragment breakdown:`);
+      for (const [type, count] of Object.entries(byType).sort((a, b) => b[1] - a[1])) {
+        console.log(`    ${type.padEnd(16)} ${count}`);
+      }
+    }
+    console.log();
+  });
+
 // ── approve-bot: start Telegram approval bot ──────────────────────────────────
 program
   .command("approve-bot")

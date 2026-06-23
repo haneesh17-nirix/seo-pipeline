@@ -27,3 +27,8 @@ brands/*/logs/*
 !brands/*/output/.gitkeep
 !brands/*/reports/.gitkeep
 !brands/*/logs/.gitkeep
+
+# macOS resource forks
+._*
+.DS_Store
+.AppleDouble
