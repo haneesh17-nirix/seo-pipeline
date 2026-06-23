@@ -13,6 +13,7 @@ import { trackAndSave, runOAuth2Flow } from "./tracking/gsc";
 import { saveReport, printConsoleReport } from "./reports/reporter";
 import { saveSitemap } from "./seo/sitemap";
 import { saveSchemas } from "./seo/schema";
+import { saveServicePages, generateServicePage } from "./seo/service-pages";
 import type { ContentType } from "./keywords/config";
 import {
   generateBatch,
@@ -301,6 +302,35 @@ program
     const dir = saveSchemas(brand, outputDir);
     console.log(`\n✓ Schema files: ${dir}`);
     console.log(`  Paste each .jsonld <script> tag into the matching page <head>\n`);
+  });
+
+// ── service-pages ─────────────────────────────────────────────────────────────
+program
+  .command("service-pages")
+  .description("Generate service × city landing pages with LocalBusiness, FAQPage, HowTo, SoftwareApp schema")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .option("--service <name>", "Generate only this service (default: all)")
+  .option("--city <name>", "Generate only this city (default: all)")
+  .action((opts) => {
+    const brand = resolveBrand(opts.brand);
+    if (opts.service && opts.city) {
+      const page = generateServicePage(opts.service, opts.city, brand);
+      const dir = path.join(process.cwd(), "brands", brand.slug, "output", "service-pages");
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, `${page.slug}.html`), page.htmlContent, "utf8");
+      fs.writeFileSync(path.join(dir, `${page.slug}.schema.json`), JSON.stringify(page.schema, null, 2), "utf8");
+      fs.writeFileSync(path.join(dir, `${page.slug}.meta.json`), JSON.stringify({ title: page.title, metaDescription: page.metaDescription, h1: page.h1 }, null, 2), "utf8");
+      console.log(`\n✓ ${page.slug} — ${page.title}`);
+      console.log(`  ${dir}\n`);
+    } else {
+      console.log(`\n  Generating all service × city pages for ${brand.name}...`);
+      const saved = saveServicePages(brand);
+      const services = [...new Set(saved.map(f => path.basename(f).split("-")[0]))];
+      console.log(`\n✓ ${saved.length} pages generated`);
+      console.log(`  Services: ${[...new Set(saved.map(f => path.basename(f).split(/(?<=[a-z])-(?=[A-Z])/)[0]))].join(", ")}`);
+      console.log(`  Output: brands/${brand.slug}/output/service-pages/`);
+      console.log(`  Each page has: .html  .schema.json  .meta.json\n`);
+    }
   });
 
 // ── report ────────────────────────────────────────────────────────────────────
