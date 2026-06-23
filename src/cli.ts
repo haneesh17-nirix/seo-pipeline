@@ -24,6 +24,11 @@ import {
   ContentType as PContentType,
 } from "./content/parameterized-generator";
 import { nextParams, paramStats, previewNextParams } from "./content/parameters";
+import { startApprovalBot, getAllPending, updateReviewStatus } from "./approval/telegram-bot";
+import { enqueueApproved, publishDueJobs, startScheduler, loadQueue } from "./publishing/scheduler";
+import { fetchUnrepliedComments, saveReplyDrafts } from "./publishing/meta";
+import { saveMetaAdDraft } from "./ads/google-ads";
+import { generateVideoForContent, VideoFormat, VideoProvider } from "./video/generator";
 
 const CONTENT_TYPES: ContentType[] = ["blog-post", "landing-page", "meta-tags", "faq"];
 
@@ -562,6 +567,134 @@ program
       });
     }
     console.log();
+  });
+
+// ── approve-bot: start Telegram approval bot ──────────────────────────────────
+program
+  .command("approve-bot")
+  .description("Start Telegram bot for owner approval of review queue")
+  .action(() => {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? "0");
+    if (!token) { console.error("TELEGRAM_BOT_TOKEN not set in .env"); process.exit(1); }
+    if (!ownerId) { console.error("TELEGRAM_OWNER_ID not set in .env"); process.exit(1); }
+    console.log("\n  Starting Telegram approval bot...");
+    startApprovalBot(token, ownerId);
+  });
+
+// ── publish: enqueue approved items and run due jobs ─────────────────────────
+program
+  .command("publish")
+  .description("Enqueue approved content and publish items that are due")
+  .option("-b, --brand <slug>", "Limit to one brand")
+  .option("--dry-run", "Show what would be published without posting")
+  .option("--status", "Show publish queue status only")
+  .action(async (opts) => {
+    if (opts.status) {
+      const queue = loadQueue();
+      const byStatus = { queued: 0, published: 0, failed: 0 };
+      queue.forEach((j) => byStatus[j.status as keyof typeof byStatus]++);
+      console.log(`\n  Publish queue: ${queue.length} total`);
+      console.log(`    Queued:    ${byStatus.queued}`);
+      console.log(`    Published: ${byStatus.published}`);
+      console.log(`    Failed:    ${byStatus.failed}`);
+      const upcoming = queue
+        .filter((j) => j.status === "queued")
+        .sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor))
+        .slice(0, 5);
+      if (upcoming.length) {
+        console.log(`\n  Next 5 scheduled:`);
+        upcoming.forEach((j) =>
+          console.log(`    ${new Date(j.scheduledFor).toLocaleString("en-IN")} — [${j.brand}] ${j.contentType}`)
+        );
+      }
+      console.log();
+      return;
+    }
+
+    const added = enqueueApproved(opts.brand);
+    if (added > 0) console.log(`\n  ${added} newly approved item(s) added to queue`);
+    await publishDueJobs(opts.dryRun);
+  });
+
+// ── scheduler: start the background publish scheduler ────────────────────────
+program
+  .command("scheduler")
+  .description("Start background scheduler (checks queue every 15 min, publishes due jobs)")
+  .option("--dry-run", "Log what would be published without posting")
+  .action((opts) => {
+    startScheduler(opts.dryRun);
+    // Keep process alive
+    process.stdin.resume();
+  });
+
+// ── reply-drafts: fetch comments and generate owner-approval reply drafts ─────
+program
+  .command("reply-drafts")
+  .description("Fetch unreplied comments and generate draft replies for owner approval")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .action(async (opts) => {
+    const brand = resolveBrand(opts.brand);
+    console.log(`\n  Fetching unreplied comments for ${brand.name}...`);
+    const drafts = await fetchUnrepliedComments(brand.slug);
+    if (!drafts.length) {
+      console.log("  No unreplied comments found.\n");
+      return;
+    }
+    const file = await saveReplyDrafts(drafts, brand.slug);
+    console.log(`  ${drafts.length} reply draft(s) saved for your review: ${file}`);
+    console.log("  Edit the drafts and approve each before posting.\n");
+  });
+
+// ── generate-video: generate video scripts and AI video ───────────────────────
+program
+  .command("generate-video")
+  .description("Generate video script and AI video for a content item")
+  .requiredOption("-b, --brand <slug>", "Brand slug")
+  .option("-f, --format <format>", "Video format: reel | short | ad-15s | ad-30s | explainer-60s", "short")
+  .option("-p, --provider <provider>", "Video provider: runway | kling | pika | local-sd", "local-sd")
+  .option("-k, --keyword <keyword>", "Generate video for a specific keyword")
+  .option("--all-approved", "Generate videos for all approved content")
+  .action(async (opts) => {
+    const brand = resolveBrand(opts.brand);
+    const format = opts.format as VideoFormat;
+    const provider = opts.provider as VideoProvider;
+
+    const reviewDir = path.join(process.cwd(), "brands", brand.slug, "output", "review-queue");
+
+    if (opts.allApproved) {
+      const files = fs.existsSync(reviewDir)
+        ? fs.readdirSync(reviewDir).filter((f) => f.endsWith(".md"))
+        : [];
+      const approved = files
+        .map((f) => { const { parseReviewFile } = require("./approval/telegram-bot"); return parseReviewFile(path.join(reviewDir, f)); })
+        .filter((item: any) => item?.status === "approved");
+
+      if (!approved.length) { console.log("  No approved content found."); return; }
+      console.log(`\n  Generating ${format} videos for ${approved.length} approved item(s)...\n`);
+      for (const item of approved) {
+        await generateVideoForContent(item, format, provider);
+      }
+      return;
+    }
+
+    if (opts.keyword) {
+      // Create a minimal review item for the keyword
+      const fakeItem = {
+        filePath: "",
+        brand: brand.slug,
+        contentType: "social-post" as const,
+        keyword: opts.keyword,
+        status: "approved" as const,
+        params: {},
+        content: `# ${opts.keyword}\n\n${opts.keyword} service available in Kerala. Book now at sahayi.co.in`,
+        generatedAt: new Date().toISOString(),
+      };
+      await generateVideoForContent(fakeItem as any, format, provider);
+      return;
+    }
+
+    console.error("  Specify --keyword or --all-approved");
   });
 
 program.parse(process.argv);
