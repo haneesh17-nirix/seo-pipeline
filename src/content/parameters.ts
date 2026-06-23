@@ -115,6 +115,36 @@ export const CONTENT_PARAMETERS = {
     "ellipsis pacing — uses... to create pause, let ideas land, trail off deliberately... then return",
     "asterisk and *emphasis* — *italics-style* emphasis via asterisks, occasional ALL CAPS for a beat, visual texture in the prose",
   ],
+
+  // ── Cultural reference frame ─────────────────────────────────────────────────
+  // The external world the content borrows texture from — the lens that reframes
+  // a routine service into something the reader immediately relates to.
+  // The reference must feel earned and accurate, never crowbarred in.
+  referenceFrame: [
+    "movie-mirror — open with a specific film scene or character moment that mirrors the reader's situation exactly; bridge from screen to real life before the product appears",
+    "political-lens — frame around a civic gap, policy promise vs ground reality, or rights the reader should have; position the product as filling what institutions haven't",
+    "empathy-first — lead entirely from inside the reader's emotional state; name the frustration, the waiting, the uncertainty, before offering anything; solution arrives like relief not pitch",
+    "helper-view — tell the story from the service provider's side — their morning, their skill, their pride, their livelihood; trust builds through the provider's humanity",
+    "job-and-livelihood — anchor the service in economic reality: income, employment, dignity of skilled work, the local economy; the product is an engine for livelihoods not just convenience",
+    "technology-reveal — contrast the old way (slow, opaque, unreliable) with the technology-enabled new way; let the tech be the quiet protagonist, never the salesperson",
+    "cultural-moment — tie the content to a Kerala festival, season, or shared social ritual; the service becomes part of how people take care of each other at that time",
+    "no-external-frame — pure direct content; no borrowed world; the writing's power comes entirely from precision and clarity",
+  ],
+
+  // ── Post architecture ────────────────────────────────────────────────────────
+  // The structural skeleton of the piece — how the narrative moves from opening
+  // to the reader's first mental image of themselves using the product.
+  // Every architecture must plant a "seed idea" — one concrete moment of imagined use.
+  postArchitecture: [
+    "mirror-pivot — open with the external reference scene in full; let the reader feel it; then pivot with 'That's what it's like when...' and map the analogy to their situation; product enters as the resolution the scene needed",
+    "day-in-life — follow one character through their day; show the problem building naturally; the product appears at exactly the breaking point; show the day continuing differently because of it",
+    "before-after-bridge — three acts: (1) the reader's world before, rendered in detail; (2) the moment of first use — specific, sensory; (3) what their world looks like after, without overpromising",
+    "question-ladder — a series of questions, each escalating in specificity, each implicitly answered by a feature or truth about the product; the ladder ends at the reader imagining themselves inside the product",
+    "letter-to-past-self — written from someone who's already used the product, addressing their past self who hasn't yet; warm, specific, honest about the doubt they had before; the seed idea lands in the memory of a solved problem",
+    "myth-bust — opens by stating a common belief about this service category that is wrong or limiting; systematically dismantles it; the product emerges as what this category should have always been",
+    "ripple-effect — one small action (a booking, a tap, a call) set against the full cascade of things it unlocks in someone's day or week; the seed idea is the feeling of 'I didn't know one tap could do all that'",
+    "news-report — deadpan journalistic framing: 'Reports from [city] suggest...'; builds credibility through the form; the product is introduced as a development that residents are finding changes their relationship with [service category]",
+  ],
 } as const;
 
 export type ParameterKey = keyof typeof CONTENT_PARAMETERS;

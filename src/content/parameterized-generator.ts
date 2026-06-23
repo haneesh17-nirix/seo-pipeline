@@ -104,6 +104,23 @@ ANNOTATION STYLE: ${params.annotationStyle}
   → Let this shape how punctuation and formatting are used.
     The page should have a typographic personality consistent
     with this style throughout — not just in one section.
+
+CULTURAL REFERENCE FRAME: ${params.referenceFrame}
+  → This is the external world the content borrows texture from.
+    Use it as an entry point — the reader should recognise the world
+    you've borrowed before they realise you're talking about a service.
+    The reference must feel earned: accurate, specific, never crowbarred in.
+    If it's a film, describe a scene precisely. If it's political, name the
+    gap honestly. If it's empathy-first, stay inside the feeling longer than
+    feels comfortable before offering anything.
+
+POST ARCHITECTURE: ${params.postArchitecture}
+  → This is the structural skeleton of the piece — follow it.
+    Every architecture has one non-negotiable goal: by the end, the reader
+    must have a concrete mental image of themselves using this product.
+    Not "this sounds good" — but "I can see myself doing this."
+    That moment — the seed idea — is the most important thing you will write.
+    Plant it naturally. Never announce it.
 ${job.extraContext ? `\nADDITIONAL CONTEXT:\n${job.extraContext}` : ""}
 
 HARD RULES:
@@ -224,6 +241,8 @@ params:
   localDepth: "${result.params.localDepth}"
   length: "${result.params.length}"
   evidence: "${result.params.evidence}"
+  referenceFrame: "${result.params.referenceFrame?.split(" — ")[0] ?? ""}"
+  postArchitecture: "${result.params.postArchitecture?.split(" — ")[0] ?? ""}"
 ---
 
 <!-- REVIEW INSTRUCTIONS
