@@ -135,26 +135,56 @@ export async function startApprovalBot(token: string, ownerId: string): Promise<
 
   client.once(Events.ClientReady, async (c) => {
     console.log(`\n  Discord bot ready: ${c.user.tag}`);
-    console.log(`  Fetching DM channel for owner ${ownerId}...`);
+    console.log(`  Looking for owner ${ownerId} in joined guilds...`);
 
-    try {
-      const owner = await c.users.fetch(ownerId);
-      const dm = await owner.createDM();
+    // Find the owner across all guilds the bot is in
+    let ownerChannel: any = null;
 
-      // Send pending count on startup
-      const pending = getAllPending();
-      if (pending.length === 0) {
-        await dm.send("✅ **Sahayi Approval Bot** is live. No pending items right now — I'll ping you when content is ready for review.");
-      } else {
-        await dm.send(`**Sahayi Approval Bot** is live.\n📋 **${pending.length} item(s)** pending review. Sending the first one now...`);
-        await sendForReview(dm, pending[0]);
+    for (const [, guild] of c.guilds.cache) {
+      try {
+        const member = await guild.members.fetch(ownerId).catch(() => null);
+        if (!member) continue;
+        // Try DM first
+        try {
+          const dm = await member.createDM();
+          ownerChannel = dm;
+          console.log(`  Found owner in guild: ${guild.name} — using DM`);
+          break;
+        } catch {
+          // DMs blocked — find a text channel the owner can see and bot can write to
+          const channel = guild.channels.cache.find(
+            (ch: any) =>
+              ch.isTextBased() &&
+              ch.permissionsFor(c.user!)?.has("SendMessages") &&
+              ch.permissionsFor(member)?.has("ViewChannel")
+          );
+          if (channel) {
+            ownerChannel = channel;
+            console.log(`  DMs blocked — using channel #${(channel as any).name} in ${guild.name}`);
+            break;
+          }
+        }
+      } catch (err: any) {
+        console.error(`  Error checking guild ${guild.name}:`, err.message);
       }
+    }
 
-      // Store dm channel reference for later use
-      (client as any)._ownerDm = dm;
-    } catch (err: any) {
-      console.error("  Could not open DM with owner:", err.message);
-      console.error("  Make sure the owner has DMs enabled from server members.");
+    if (!ownerChannel) {
+      console.error("  Could not reach owner. Check:");
+      console.error("  1. Bot is in a server with you");
+      console.error("  2. Discord Dev Portal → Bot → enable SERVER MEMBERS INTENT");
+      console.error("  3. Or allow DMs from server members in your Privacy Settings");
+      return;
+    }
+
+    (client as any)._ownerDm = ownerChannel;
+
+    const pending = getAllPending();
+    if (pending.length === 0) {
+      await ownerChannel.send("✅ **Sahayi Approval Bot** is live. No pending items — I'll ping you when content is ready.");
+    } else {
+      await ownerChannel.send(`**Sahayi Approval Bot** is live.\n📋 **${pending.length} item(s)** pending review. Sending the first one now...`);
+      await sendForReview(ownerChannel, pending[0]);
     }
   });
 

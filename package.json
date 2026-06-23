@@ -1,6 +1,6 @@
 {
   "name": "seo-pipeline",
-  "version": "1.8.3",
+  "version": "2.1.0",
   "description": "Free SEO pipeline — Ollama content generation + Google Search Console tracking",
   "scripts": {
     "build": "tsc",
@@ -12,10 +12,17 @@
     "report": "ts-node src/cli.ts report"
   },
   "dependencies": {
+    "@azure/openai": "^2.0.0",
+    "axios": "^1.18.1",
     "commander": "^12.0.0",
+    "discord.js": "^14.26.4",
     "dotenv": "^16.4.5",
-    "node-fetch": "^2.7.0",
+    "form-data": "^4.0.6",
     "googleapis": "^140.0.0",
+    "node-cron": "^4.5.0",
+    "node-fetch": "^2.7.0",
+    "openai": "^6.44.0",
+    "telegraf": "^4.16.3",
     "xmlbuilder2": "^3.1.1"
   },
   "devDependencies": {

@@ -1,268 +1,291 @@
-# SEO Pipeline — System Documentation
+# Pipeline
 
-> Free, self-hosted SEO automation for multiple brands.
-> Zero subscription cost: Ollama (local LLM) + Google Search Console API (free quota).
-
----
-
-## Table of Contents
-
-1. [Architecture](#architecture)
-2. [Brands](#brands)
-3. [CLI Reference](#cli-reference)
-4. [Infrastructure](#infrastructure)
-5. [Workflow](#workflow)
-6. [Adding a New Brand](#adding-a-new-brand)
-7. [GitHub Actions](#github-actions)
+> End-to-end walkthrough: from content generation to published post.
 
 ---
 
-## Architecture
+## Overview
 
 ```
-seo-pipeline/
-├── brands/                     # One directory per brand
-│   ├── habun-rak/
-│   │   ├── brand.json          # Brand config (keywords, pages, API endpoints)
-│   │   ├── gsc-credentials.json  ← gitignored (sensitive)
-│   │   ├── output/             # Generated content (sitemap, schema, blog posts)
-│   │   ├── reports/            # GSC rank reports (markdown + JSON)
-│   │   └── logs/               # rank-history.json (90-day rolling)
-│   ├── habun-sharjah/
-│   ├── nyrix/
-│   └── bluemetal-pro/
-├── src/
-│   ├── brands/loader.ts        # BrandConfig interface, load/list/create helpers
-│   ├── cli.ts                  # CLI entry point (all commands)
-│   ├── content/generator.ts    # LLM content generation (blog, landing, meta, FAQ)
-│   ├── tracking/gsc.ts         # Google Search Console API + rank history
-│   ├── reports/reporter.ts     # Console + Markdown rank reports
-│   ├── seo/sitemap.ts          # sitemap.xml generation
-│   └── seo/schema.ts           # JSON-LD schema markup generation
-├── infra/
-│   ├── main.bicep              # Azure VM (Ollama host, UAE North)
-│   └── deploy.sh               # Provision script
-└── docs/                       # All documentation
-```
-
-### Data flow
-
-```
-CLI command
-  │
-  ├─► Ollama (Azure VM UAE North, via SSH tunnel)
-  │     └─► Generated content → brands/<slug>/output/
-  │
-  ├─► Google Search Console API
-  │     └─► Rank data → brands/<slug>/logs/rank-history.json
-  │                   → brands/<slug>/reports/report-YYYY-MM-DD.md
-  │
-  ├─► sitemap.xml → brands/<slug>/output/sitemap.xml
-  └─► JSON-LD     → brands/<slug>/output/schema/*.jsonld
+generate-content
+      |
+      v
+review-queue  (brands/<slug>/output/review-queue/)
+      |
+      v
+Discord approval bot  (DM to owner)
+      |
+      v  approved
+publish queue  (publish-queue.json)
+      |
+      v
+scheduler  (cron every 15 min, PM2)
+      |
+      +---> Meta (Instagram + Facebook)
+      +---> YouTube
+      +---> Blog (WordPress / Ghost / webhook)
+      +---> Google Ads (RSA, created PAUSED)
 ```
 
 ---
 
-## Brands
+## Stage 1 — Content Generation
 
-| Slug | Name | Type | Country | Site |
-|------|------|------|---------|------|
-| `habun-rak` | Habun — Ras Al Khaimah | restaurant | UAE (ae) | https://habun.ae |
-| `habun-sharjah` | Habun — Sharjah | restaurant | UAE (ae) | https://habun.ae |
-| `nyrix` | Nyrix | saas | India (in) | https://www.nyrix.aazhara.in |
-| `bluemetal-pro` | BlueMetal Pro | saas | India (in) | https://www.blumetal.pro |
-
-Full documentation for each brand:
-- [brands/habun-rak/README.md](../brands/habun-rak/README.md)
-- [brands/habun-sharjah/README.md](../brands/habun-sharjah/README.md)
-- [brands/nyrix/README.md](../brands/nyrix/README.md)
-- [brands/bluemetal-pro/README.md](../brands/bluemetal-pro/README.md)
-
----
-
-## CLI Reference
-
-### Brand management
+### Command
 
 ```bash
-seo brand list                        # List all brands with GSC status
-seo brand add                         # Interactive wizard to create a new brand
-seo brand show <slug>                 # Show keyword groups for a brand
+seo generate-content --brand sahayi --type blog-post
 ```
 
-### Content generation
+Options: `--type` accepts `blog-post | social-post | ad-copy | faq-page | all`
+Add `--keyword "keyword" --city "Kochi"` for a single targeted piece.
 
-Requires Ollama reachable (local or via SSH tunnel to Azure VM).
+### What happens
 
-```bash
-# Single keyword
-seo generate --brand habun-rak --type blog-post --keyword "restaurant in RAK"
+1. `parameterized-generator.ts` builds a list of `GenerateJob` objects from the brand's keyword groups.
+2. For each job, `parameters.ts` calls `nextParams()` which advances a per-brand LCG state machine and returns a unique 14-dimension `ContentParams` object. State is saved to `brands/<slug>/logs/param-state-<type>.json`.
+3. If a corpus exists (from a prior `index-corpus` run), `synthesizer.ts` selects 7 locality-biased fragments to inject as additional context into the prompt.
+4. `llm/provider.ts` sends the assembled prompt to Azure OpenAI (gpt-4o-mini). Falls back to Ollama if Azure vars are absent.
+5. The response is written to `brands/<slug>/output/review-queue/<timestamp>-<keyword>.md` with front-matter: `status: pending_review`, `contentType`, `keyword`, `tone`, and the full `ContentParams`.
 
-# Keyword group
-seo generate --brand habun-rak --type meta-tags --group "Local RAK"
+### Output directory
 
-# All keywords for a brand
-seo generate --brand bluemetal-pro --type faq --all
-
-# Content types: blog-post | landing-page | meta-tags | faq
 ```
-
-Output lands in `brands/<slug>/output/`.
-
-### Rank tracking
-
-Requires `brands/<slug>/gsc-credentials.json` (see [gsc-setup.md](gsc-setup.md)).
-
-```bash
-seo track --brand habun-rak           # Track all keywords for one brand
-seo track --brand habun-rak --group "Local RAK"   # One group only
-seo track-all                         # Track every brand that has GSC credentials
-```
-
-History is stored at `brands/<slug>/logs/rank-history.json` (rolling 90 days).
-Reports are saved to `brands/<slug>/reports/report-YYYY-MM-DD.md`.
-
-### Sitemap & schema
-
-```bash
-seo sitemap --brand habun-rak         # → brands/habun-rak/output/sitemap.xml
-seo schema  --brand habun-rak         # → brands/habun-rak/output/schema/*.jsonld
-```
-
-### Reports
-
-```bash
-seo report --brand habun-rak          # Print latest snapshot from history
+brands/<slug>/output/review-queue/
+├── 2026-06-23T10-00-00-best-plumber-kochi.md
+├── 2026-06-23T10-00-05-house-cleaning-thrissur.md
+└── ...
 ```
 
 ---
 
-## Infrastructure
+## Stage 2 — Review Queue
 
-### Azure VM — Ollama host
-
-| Setting | Value |
-|---------|-------|
-| Resource group | `habun-seo-rg` |
-| Location | `uaenorth` (UAE North) |
-| VM | `habun-seo-ollama` — Standard_D2s_v3 |
-| OS | Ubuntu 22.04 LTS |
-| Public IP | `20.216.5.173` |
-| SSH key | `~/.ssh/id_rsa_habun_seo` |
-| Ollama model | `llama3.2` |
-
-**Why UAE North?** All content generation and GSC requests originate from a UAE IP, ensuring location-accurate keyword tracking for Habun (Ras Al Khaimah + Sharjah).
-
-### SSH tunnel (required for content generation)
+### Inspect pending files
 
 ```bash
-# Open tunnel (background)
-ssh -i ~/.ssh/id_rsa_habun_seo \
-    -L 11434:localhost:11434 \
-    seouser@20.216.5.173 -N &
-
-# Verify
-curl http://localhost:11434/api/tags
+seo review-queue --brand sahayi           # list pending_review items
+seo review-queue --brand sahayi --approved  # list approved items
 ```
 
-Set in `.env`:
-```
-OLLAMA_HOST=http://localhost:11434
+Each file is a Markdown document with a YAML front-matter block:
+
+```yaml
+---
+brand: sahayi
+contentType: blog-post
+keyword: "best plumber in Kochi"
+status: pending_review
+tone: "conversational and warm"
+structure: "problem → cause → solution narrative"
+literaryInfluence: "R.K. Narayan — gentle, unhurried..."
+generatedAt: 2026-06-23T10:00:00.000Z
+---
 ```
 
-For India brands (Nyrix, BlueMetal Pro), Ollama can run locally — no tunnel needed.
+You can edit the body of any file before approving it. The front-matter `status` field is what the bot and scheduler read.
 
-### Provision / redeploy
+---
+
+## Stage 3 — Discord Approval
+
+### Setup (one time)
+
+1. Create a Discord app at https://discord.com/developers/applications
+2. Bot tab → Add Bot → copy the token → set `DISCORD_BOT_TOKEN` in `.env`
+3. Enable Developer Mode in Discord Settings → Advanced, then right-click your username → Copy User ID → set `DISCORD_OWNER_ID` in `.env`
+4. Add the bot to your server (or enable DMs from server members)
+
+### Running the bot
+
+In production, PM2 manages it:
 
 ```bash
-cd infra && ./deploy.sh
+pm2 start ecosystem.config.js
+# starts sahayi-discord-bot and sahayi-scheduler
+```
+
+For a one-off run:
+
+```bash
+seo approve-bot
+```
+
+### Approval flow
+
+The bot sends you a DM for each `pending_review` item. Each message shows the content type, keyword, tone summary, and a truncated preview of the body. Four buttons:
+
+| Button | Result |
+|--------|--------|
+| Approve | Sets `status: approved` — scheduler will pick it up |
+| Reject | Sets `status: rejected` — item stays in review-queue, not published |
+| Revision | Sets `status: needs_revision` — edit the file, then re-run the bot to re-queue it |
+| Skip | Sets `status: skipped` — ignores for now, revisit later |
+
+### Bot commands
+
+| Command | Description |
+|---------|-------------|
+| `/queue` | Show all items in the review queue with their status |
+| `/pending` | Show only items awaiting a decision |
+| `/next` | Get the next pending item to review |
+
+---
+
+## Stage 4 — Publish Queue
+
+### Enqueue approved items
+
+```bash
+seo publish
+```
+
+This calls `enqueueApproved()` which scans all brands' review queues for `status: approved` items that are not yet in the publish queue. Each item is added to `publish-queue.json` with a `scheduledFor` timestamp (immediate by default; the scheduler spaces posts if you configure a gap).
+
+Check the queue status:
+
+```bash
+seo publish --status
+```
+
+Output:
+
+```
+Publish queue: 12 total
+  Queued:    8
+  Published: 3
+  Failed:    1
+
+Next 5 scheduled:
+  23/06/2026, 11:00:00 am — [sahayi] blog-post
+  23/06/2026, 11:15:00 am — [sahayi] social-post
+  ...
 ```
 
 ---
 
-## Workflow
+## Stage 5 — Scheduler
 
-### Daily / on-demand
+The scheduler runs `publishDueJobs()` every 15 minutes. It picks up all items in `publish-queue.json` where `scheduledFor <= now` and `status = queued`, then dispatches each to the correct publishing adapter.
 
-1. Open SSH tunnel to Azure VM
-2. Run `seo generate --brand <slug> --type blog-post --all`
-3. Review output in `brands/<slug>/output/`
-4. Publish content to site
-
-### Weekly (automated via GitHub Actions)
-
-- `.github/workflows/weekly-track.yml` runs `seo track-all` every Monday
-- Pushes updated reports and rank history back to the repo
-
-### Pre-push gate
-
-Every `git push` triggers the dev-automation pipeline:
-- Runs tests
-- Checks API endpoints and page links (warnings only if site not live)
-- Updates CHANGELOG, ARCHITECTURE, DESIGN docs
-- Blocks push if hard failures occur
-
----
-
-## Adding a New Brand
+In production, PM2 keeps it alive:
 
 ```bash
-seo brand add
-# Follow the interactive prompts
+pm2 start ecosystem.config.js   # sahayi-scheduler runs seo scheduler
+pm2 logs sahayi-scheduler       # watch publish log
 ```
 
-Then:
+For a one-off dry run:
 
-1. Edit `brands/<slug>/brand.json` to add keyword groups, pages, and API endpoints
-2. Follow [gsc-setup.md](gsc-setup.md) to create `brands/<slug>/gsc-credentials.json`
-3. Run `seo sitemap --brand <slug>` and `seo schema --brand <slug>`
-4. Add the brand to `.github/workflows/weekly-track.yml` if GSC credentials are available in CI
-
-### Brand config schema
-
-```jsonc
-{
-  "slug": "my-brand",               // unique identifier, kebab-case
-  "name": "My Brand",               // display name
-  "type": "restaurant|saas|ecommerce|other",
-  "siteUrl": "https://example.com",
-  "gscSiteUrl": "https://example.com",  // as registered in GSC (may differ)
-  "gscCredentialsFile": "./brands/my-brand/gsc-credentials.json",
-  "targetCountry": "ae",            // 2-letter ISO code
-  "gscCountryCode": "are",          // 3-letter GSC code (ae→are, in→ind, us→usa)
-  "languages": ["en", "ar"],
-  "ollamaModel": "llama3.2",
-  "keywordGroups": [
-    {
-      "group": "Group Name",
-      "keywords": ["keyword 1", "keyword 2"],
-      "targetPage": "/page-path",
-      "schemaType": "Restaurant|SoftwareApplication|Product"
-    }
-  ],
-  "pages": [
-    { "path": "/", "label": "Home" }
-  ],
-  "apiEndpoints": [
-    { "method": "GET", "path": "/api/health", "expect": 200, "label": "Health" }
-  ]
-}
+```bash
+seo publish --dry-run   # shows what would be published without posting
 ```
 
 ---
 
-## GitHub Actions
+## Stage 6 — Publishing Adapters
 
-### Weekly rank tracking
+### Meta (Instagram + Facebook)
 
-File: `.github/workflows/weekly-track.yml`
+Adapter: `src/publishing/meta.ts`
 
-Runs every Monday at 06:00 UTC. Requires these repository secrets:
+Required env vars: `META_ACCESS_TOKEN`, `META_IG_ACCOUNT_ID`, `META_FB_PAGE_ID`
+Per-brand overrides: `SAHAYI_META_TOKEN`, `SAHAYI_IG_ACCOUNT_ID`, `SAHAYI_FB_PAGE_ID`
 
-| Secret | Description |
-|--------|-------------|
-| `GSC_CREDENTIALS_HABUN` | Contents of `brands/habun-rak/gsc-credentials.json` |
-| `GSC_CREDENTIALS_NYRIX` | Contents of `brands/nyrix/gsc-credentials.json` |
-| `GSC_CREDENTIALS_BLUEMETAL` | Contents of `brands/bluemetal-pro/gsc-credentials.json` |
+Social posts are published via the Meta Graph API. After publishing, you can fetch unreplied comments and generate draft replies for manual approval:
 
-Add secrets at: `https://github.com/<owner>/seo-pipeline/settings/secrets/actions`
+```bash
+seo reply-drafts --brand sahayi
+# Saves drafts to brands/sahayi/output/reply-drafts/
+# Edit and approve each before posting — no automated replies
+```
+
+### YouTube
+
+Adapter: `src/publishing/youtube.ts`
+
+Credentials: `brands/<slug>/yt-credentials.json` (OAuth2, gitignored)
+Scopes needed: `youtube.upload`, `youtube.force-ssl`
+
+### Blog
+
+Adapter: `src/publishing/blog.ts`
+
+Set `BLOG_ADAPTER` to one of:
+- `wordpress` — uses WP REST API + application password (`BLOG_API_TOKEN`)
+- `ghost` — uses Ghost Admin API (`BLOG_API_TOKEN`)
+- `webhook` — POSTs JSON to `BLOG_WEBHOOK_URL` (your CMS handles it)
+
+Per-brand: `SAHAYI_BLOG_ADAPTER`, `SAHAYI_BLOG_URL`, `SAHAYI_BLOG_TOKEN`
+
+### Google Ads
+
+Adapter: `src/ads/google-ads.ts`
+
+Creates RSA (Responsive Search Ad) drafts with `status: PAUSED`. You review and enable spend manually in the Google Ads UI. The pipeline never enables spend automatically.
+
+Required env vars: `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REFRESH_TOKEN`, `GOOGLE_ADS_CUSTOMER_ID`
+
+---
+
+## Video Generation (optional)
+
+Video generation is a separate step. It produces a video script Markdown file in all cases; if a provider API key is set, it also submits to that provider and downloads the result.
+
+```bash
+# Generate videos for all approved content
+seo generate-video --brand sahayi --all-approved --format reel
+
+# Generate for a specific keyword
+seo generate-video --brand sahayi --keyword "house cleaning Kochi" --format short --provider runway
+```
+
+Providers tried in order: `runway` → `kling` → `pika` → `local-sd` (script markdown only)
+
+---
+
+## Rank Tracking
+
+Rank tracking is independent of the content pipeline. Run it on demand or via the weekly GitHub Actions workflow.
+
+```bash
+seo auth --brand sahayi          # one-time OAuth2 browser login
+seo track --brand sahayi         # fetch latest rankings
+seo track-all                    # all brands with GSC credentials
+seo report --brand sahayi        # print last snapshot
+```
+
+History is stored at `brands/<slug>/logs/rank-history.json` (rolling 90 days). Reports saved to `brands/<slug>/reports/report-YYYY-MM-DD.md`.
+
+---
+
+## Corpus Growth Loop
+
+The corpus improves generation quality over time:
+
+```
+generate-content  -->  review-queue  -->  approval  -->  index-corpus
+                                                               |
+                                          synthesizer.ts  <---+
+                                          (fragments injected into next prompts)
+```
+
+After accumulating approved content, run:
+
+```bash
+seo index-corpus                  # index all brands
+seo synthesis-stats --brand sahayi  # check corpus size and fragment breakdown
+```
+
+Subsequent `generate-content` runs will automatically use the corpus for locality-biased fragment injection.
+
+---
+
+## Security Checklist
+
+- All content requires Discord owner approval before publishing
+- Google Ads RSAs always created PAUSED — manual spend activation only
+- No automated liking or commenting (platform ToS)
+- `.env` is gitignored — never commit credentials
+- YouTube and GSC credentials stored per-brand in `brands/<slug>/` (gitignored)
+- Never use the Anthropic/Claude API — all inference on Azure OpenAI
