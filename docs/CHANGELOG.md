@@ -2,6 +2,19 @@
 
 Detailed record of every change deployed.
 
+## v2.5.0 — 2026-10-02 10:25:20
+**Commit:** `704457e` — feat: agent chain, deterministic validator, and multi-provider LLM fallback  
+**Author:** Haneesh P  
+**Type:** feat  
+**Files changed:** 14 total
+- New: scripts/render-animatic.mjs, scripts/start-bot.sh, scripts/start-scheduler.sh, src/agents/agents.ts, src/agents/bench.ts, src/agents/pipeline.ts, src/agents/run.ts, src/agents/types.ts, src/video/validate.ts
+- Modified: .gitignore, docs/ARCHITECTURE.md, docs/CHANGELOG.md, docs/PIPELINE.md, src/llm/provider.ts
+---
+## 2.5.0 — 2026-10-02
+
+### Features
+- feat: agent chain, deterministic validator, and multi-provider LLM fallback ([704457e](../../commit/704457e6e3375dc7622583b357f5a3c994044f53)) — Haneesh P
+
 ## v2.4.0 — 2026-06-24 09:20:46
 **Commit:** `1f9df16` — chore: add v2.1.0 changelog + Ghost PostgreSQL migration fix script  
 **Author:** Haneesh P  

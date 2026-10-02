@@ -1,6 +1,6 @@
 {
   "name": "seo-pipeline",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Free SEO pipeline — Ollama content generation + Google Search Console tracking",
   "scripts": {
     "build": "tsc",

@@ -206,3 +206,11 @@ publishDueJobs()  called every 15 min by scheduler
 ### 2026-06-11 — v515b7a7 — feat: deploy Ollama to UAE North (habun-seo-rg)
 ### 2026-06-11 — v34674bd — feat: OAuth2 browser auth flow for GSC
 ### 2026-06-09 — vdb8c7b4 — docs: add CHANGELOG, architecture/design/API docs
+
+### 2026-10-02 — v704457e — feat: agent chain, deterministic validator, and multi-provider LLM fallback
+
+• Introduced a deterministic validator for agent chains, improving predictability and reliability.
+• Multi-provider LLM fallback was implemented, allowing for more robust and fault-tolerant LLM integration.
+• New interfaces were introduced in `src/agents/types.ts` to support the multi-provider LLM fallback.
+• The `src/video/validate.ts` module now depends on the new deterministic validator interface.
+• No significant changes were made to architectural patterns; however, the addition of the multi-provider LLM fallback introduces a new layer of complexity and potential single-point-of-failure concerns.
