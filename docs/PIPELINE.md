@@ -288,4 +288,6 @@ Subsequent `generate-content` runs will automatically use the corpus for localit
 - No automated liking or commenting (platform ToS)
 - `.env` is gitignored — never commit credentials
 - YouTube and GSC credentials stored per-brand in `brands/<slug>/` (gitignored)
-- Never use the Anthropic/Claude API — all inference on Azure OpenAI
+
+The LLM provider is a procurement choice, not a security control, and is documented
+in ARCHITECTURE.md rather than here.

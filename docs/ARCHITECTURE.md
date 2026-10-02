@@ -47,7 +47,16 @@ Active brands: `habun-rak`, `habun-sharjah` (restaurant, UAE) · `nyrix`, `bluem
 | Production | Azure OpenAI (gpt-4o-mini) | AZURE_OPENAI_ENDPOINT + AZURE_OPENAI_KEY set in .env |
 | Local dev | Ollama (llama3.2) | Azure vars absent; OLLAMA_HOST=http://localhost:11434 |
 
-Never use the Anthropic/Claude API. All inference on Azure in production.
+Provider is chosen by which credentials are present, in this order: Azure OpenAI,
+Anthropic, then Ollama. Azure is skipped for the rest of a run once it fails, so a
+deleted or unreachable resource falls through to the next provider rather than
+failing every generation call.
+
+There is no vendor restriction. An earlier note here read "never use the
+Anthropic/Claude API" — that was a vendor-consolidation preference recorded when
+inference moved to Azure in June 2026, not a compliance requirement, and it is
+removed. If a data-residency commitment is ever made to a client, reinstate it
+deliberately and say what the commitment is.
 
 ### PM2
 

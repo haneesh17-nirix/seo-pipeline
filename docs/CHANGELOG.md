@@ -2,6 +2,22 @@
 
 Detailed record of every change deployed.
 
+## v2.4.0 — 2026-06-24 09:20:46
+**Commit:** `1f9df16` — chore: add v2.1.0 changelog + Ghost PostgreSQL migration fix script  
+**Author:** Haneesh P  
+**Type:** chore  
+**Files changed:** 2 total
+- New: infra/fix-ghost-postgres.sh
+- Modified: CHANGELOG.md
+---
+## v2.4.0 — 2026-06-24 09:18:27
+**Commit:** `1f9df16` — chore: add v2.1.0 changelog + Ghost PostgreSQL migration fix script  
+**Author:** Haneesh P  
+**Type:** chore  
+**Files changed:** 2 total
+- New: infra/fix-ghost-postgres.sh
+- Modified: CHANGELOG.md
+---
 ## v1.8.3 — 2026-06-19 21:35:53
 **Commit:** `102ab32` — chore: sync pending automation docs  
 **Author:** haneesh.pulliyerangatte  

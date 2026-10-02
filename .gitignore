@@ -32,3 +32,6 @@ brands/*/logs/*
 ._*
 .DS_Store
 .AppleDouble
+
+# Compiled validator (build output of src/video/validate.ts)
+dist-validate/
