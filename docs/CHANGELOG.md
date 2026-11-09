@@ -2,6 +2,13 @@
 
 Detailed record of every change deployed.
 
+## v2.6.0 — 2026-11-09 08:07:52
+**Commit:** `2f99735` — chore: automation output for v2.5.0 [skip ci]  
+**Author:** Haneesh P  
+**Type:** chore  
+**Files changed:** 4 total
+- Modified: docs/ARCHITECTURE.md, docs/CHANGELOG.md, docs/UI_DESIGN_PATTERNS.md, package.json
+---
 ## v2.5.0 — 2026-10-02 10:25:20
 **Commit:** `704457e` — feat: agent chain, deterministic validator, and multi-provider LLM fallback  
 **Author:** Haneesh P  

@@ -214,3 +214,11 @@ publishDueJobs()  called every 15 min by scheduler
 • New interfaces were introduced in `src/agents/types.ts` to support the multi-provider LLM fallback.
 • The `src/video/validate.ts` module now depends on the new deterministic validator interface.
 • No significant changes were made to architectural patterns; however, the addition of the multi-provider LLM fallback introduces a new layer of complexity and potential single-point-of-failure concerns.
+
+### 2026-11-09 — v2f99735 — chore: automation output for v2.5.0 [skip ci]
+
+• The package.json file has been updated to include automation output for version 2.5.0, indicating a change in how build and deployment processes are handled.
+• This change affects the build and deployment modules, as they now need to consider the automated output of the package.json file.
+• A new dependency on a tool for automation output has been introduced, which is not currently being tested by CI.
+• The update does not introduce any new interfaces or APIs, but rather modifies existing behavior related to automation.
+• No architectural patterns have been added or removed as a result of this change.
