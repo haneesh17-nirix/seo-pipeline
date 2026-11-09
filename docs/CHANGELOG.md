@@ -2,6 +2,13 @@
 
 Detailed record of every change deployed.
 
+## v2.6.1 — 2026-11-09 08:08:14
+**Commit:** `033e0de` — chore: automation output for v2.6.0 [skip ci]  
+**Author:** Haneesh P  
+**Type:** chore  
+**Files changed:** 3 total
+- Modified: docs/ARCHITECTURE.md, docs/CHANGELOG.md, package.json
+---
 ## v2.6.0 — 2026-11-09 08:07:52
 **Commit:** `2f99735` — chore: automation output for v2.5.0 [skip ci]  
 **Author:** Haneesh P  

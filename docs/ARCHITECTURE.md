@@ -222,3 +222,10 @@ publishDueJobs()  called every 15 min by scheduler
 • A new dependency on a tool for automation output has been introduced, which is not currently being tested by CI.
 • The update does not introduce any new interfaces or APIs, but rather modifies existing behavior related to automation.
 • No architectural patterns have been added or removed as a result of this change.
+
+### 2026-11-09 — v033e0de — chore: automation output for v2.6.0 [skip ci]
+
+• The commit introduces automation output for version 2.6.0, which affects the build process and deployment scripts.
+• The package.json file has been modified to include new dependencies and scripts related to automation output.
+• A new module or API is not introduced in this change, but rather a configuration option is added to control the level of automation output.
+• There are no changes to existing interfaces or APIs that would require updates from dependent components.
