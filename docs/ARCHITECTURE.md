@@ -229,3 +229,11 @@ publishDueJobs()  called every 15 min by scheduler
 • The package.json file has been modified to include new dependencies and scripts related to automation output.
 • A new module or API is not introduced in this change, but rather a configuration option is added to control the level of automation output.
 • There are no changes to existing interfaces or APIs that would require updates from dependent components.
+
+### 2026-11-09 — v02522e1 — chore: automation output for v2.6.1 + drop AppleDouble forks from .git/objects
+
+• The commit introduces automation for outputting version information in package.json.
+• The AppleDouble forks have been removed from .git/objects, simplifying the repository structure.
+• A new dependency has been introduced to manage automated output of version information.
+• This change affects the build process and may require adjustments to downstream components.
+• No significant changes were made to core application logic.
