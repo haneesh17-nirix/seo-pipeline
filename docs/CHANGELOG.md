@@ -2,6 +2,13 @@
 
 Detailed record of every change deployed.
 
+## v2.6.3 — 2026-11-09 08:21:19
+**Commit:** `5d32dce` — chore: automation output for v2.6.2 [skip ci]  
+**Author:** Haneesh P  
+**Type:** chore  
+**Files changed:** 3 total
+- Modified: docs/ARCHITECTURE.md, docs/CHANGELOG.md, package.json
+---
 ## v2.6.2 — 2026-11-09 08:21:10
 **Commit:** `02522e1` — chore: automation output for v2.6.1 + drop AppleDouble forks from .git/objects  
 **Author:** Haneesh P  
